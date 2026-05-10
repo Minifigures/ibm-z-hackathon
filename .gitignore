@@ -1,0 +1,47 @@
+# Env
+.env
+.env.local
+.env.*.local
+*.env
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Node
+node_modules/
+.next/
+out/
+dist/
+*.tsbuildinfo
+.turbo/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+*.swp
+
+# Planning / strategy docs (kept locally only, not committed). The PRD lives at docs/PRD.md.
+PRD_disease_outflow_forecaster.md
+Execution_Ready_Ideas.md
+IBM_Z_20_Ideas.md
+IBM_Z_Hackathon_Ideas_Brief.md
+Market_Reality_2026.md
+Master_Final.md
+Master_Final_v5.md
+Master_v3.md
+Strategy_Update_v2.md
+Tech_Stacks.md

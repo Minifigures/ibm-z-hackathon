@@ -1,0 +1,42 @@
+{
+  "covid19": {
+    "id": "covid19",
+    "label": "COVID-19",
+    "r0": 2.5,
+    "incubation_days": 5.0,
+    "infectious_days": 6.0,
+    "cfr_pct": 1.0,
+    "notes": "Default values reflect the ancestral-strain consensus from CDC and Imperial College reports (2020 to 2022).",
+    "citations": ["Liu et al. 2020 J Travel Med", "Verity et al. 2020 Lancet ID"]
+  },
+  "flu": {
+    "id": "flu",
+    "label": "Seasonal Influenza",
+    "r0": 1.4,
+    "incubation_days": 2.0,
+    "infectious_days": 4.0,
+    "cfr_pct": 0.1,
+    "notes": "Pandemic-level seasonal flu. CFR is age-weighted population average.",
+    "citations": ["Biggerstaff et al. 2014 BMC Infect Dis"]
+  },
+  "mpox": {
+    "id": "mpox",
+    "label": "Mpox (Clade IIb)",
+    "r0": 1.6,
+    "incubation_days": 9.0,
+    "infectious_days": 14.0,
+    "cfr_pct": 0.2,
+    "notes": "2022 outbreak parameters; transmission heterogeneity is high so this is a population-average view.",
+    "citations": ["Du et al. 2022 Lancet Reg Health Eur"]
+  },
+  "pathogenx": {
+    "id": "pathogenx",
+    "label": "Pathogen X (custom)",
+    "r0": 2.0,
+    "incubation_days": 5.0,
+    "infectious_days": 7.0,
+    "cfr_pct": 2.0,
+    "notes": "Hypothetical novel pathogen. All parameters are user-tunable; presets are mid-range scenario.",
+    "citations": []
+  }
+}
