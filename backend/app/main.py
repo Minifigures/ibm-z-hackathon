@@ -15,7 +15,7 @@ from pathlib import Path
 from typing import Any, Literal
 
 from dotenv import load_dotenv
-from fastapi import FastAPI, HTTPException
+from fastapi import Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
@@ -25,7 +25,14 @@ from .disease_lookup import lookup as disease_lookup
 from .explain import explain
 from .mobility import load_countries
 from .nowcast import NowcastObservation, NowcastParams, run_nowcast
+from .rate_limit import RateLimit
 from .simulate import SimParams, run
+
+# Per-IP sliding-window rate limit applied to the watsonx/CPU-heavy endpoints.
+# The numbers are demo-friendly: a real interactive user will not exceed 10
+# nowcasts per minute, but a tight loop hitting the backend will get 429'd.
+nowcast_limiter = RateLimit(max_calls=10, window_seconds=60)
+disease_lookup_limiter = RateLimit(max_calls=20, window_seconds=60)
 
 DATA_DIR = Path(__file__).parent / "data"
 
@@ -69,7 +76,9 @@ class NowcastObservationModel(BaseModel):
 
 
 class NowcastRequest(SimulateRequest):
-    observations: list[NowcastObservationModel]
+    # Cap the observation list so a malicious payload cannot blow up memory
+    # or CPU. 365 is generous: a year of daily counts for a single seed.
+    observations: list[NowcastObservationModel] = Field(..., min_length=1, max_length=365)
     n_particles: int = Field(400, ge=50, le=2000)
     rho_min: float = Field(0.02, gt=0.0, lt=1.0)
     rho_max: float = Field(0.5, gt=0.0, le=1.0)
@@ -146,7 +155,7 @@ def explain_endpoint(req: ExplainRequest) -> dict[str, Any]:
         }
 
 
-@app.post("/nowcast")
+@app.post("/nowcast", dependencies=[Depends(nowcast_limiter)])
 def nowcast_endpoint(req: NowcastRequest) -> dict[str, Any]:
     if req.rho_min >= req.rho_max:
         raise HTTPException(status_code=400, detail="rho_min must be < rho_max")
@@ -181,7 +190,7 @@ def nowcast_endpoint(req: NowcastRequest) -> dict[str, Any]:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
 
-@app.post("/disease-params")
+@app.post("/disease-params", dependencies=[Depends(disease_lookup_limiter)])
 def disease_params_endpoint(req: DiseaseLookupRequest) -> dict[str, Any]:
     result = disease_lookup(req.name)
     status = result.get("status")
