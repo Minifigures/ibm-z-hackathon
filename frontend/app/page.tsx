@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ForecastChart } from "@/components/forecast-chart";
 import { ExplainPanel } from "@/components/explain-panel";
 import { HubList } from "@/components/hub-list";
+import { Landing } from "@/components/landing";
 import { NowcastPanel } from "@/components/nowcast-panel";
 import { SliderRow } from "@/components/slider-row";
 import { DiseaseSearch } from "@/components/disease-search";
@@ -44,6 +45,7 @@ const DEFAULT_REQ: SimulateRequest = {
 };
 
 export default function Page() {
+  const [showLanding, setShowLanding] = useState(true);
   const [countries, setCountries] = useState<Country[]>([]);
   const [presets, setPresets] = useState<Record<string, DiseasePreset>>({});
   const [req, setReq] = useState<SimulateRequest>(DEFAULT_REQ);
@@ -178,11 +180,13 @@ export default function Page() {
   const calibration = result?.calibration;
 
   return (
+    <>
+    {showLanding ? <Landing onLaunch={() => setShowLanding(false)} /> : null}
     <main className="grid grid-cols-[360px_1fr] grid-rows-[auto_1fr] h-screen w-screen overflow-hidden bg-ink-900 text-slate-100">
       <header className="col-span-2 border-b border-ink-600 bg-ink-800 px-4 py-2 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="w-2 h-2 rounded-full bg-accent shadow-[0_0_8px_2px_rgba(124,242,200,0.6)]" />
-          <h1 className="text-sm font-semibold tracking-wide">Disease Outflow Forecaster</h1>
+          <h1 className="text-sm font-semibold tracking-wide">Pandexis · Disease Outflow Forecaster</h1>
           <span className="text-[11px] text-slate-500">
             SEIR + gravity mobility + Monte Carlo · IBM Z hackathon prototype
           </span>
@@ -449,5 +453,6 @@ export default function Page() {
         </div>
       </section>
     </main>
+    </>
   );
 }
