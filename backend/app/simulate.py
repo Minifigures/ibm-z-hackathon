@@ -22,6 +22,33 @@ QUANTILES = (0.025, 0.25, 0.5, 0.75, 0.975)
 THETA_IMPORT_COUPLING = 0.05  # weight on imported infectious pressure in lambda
 
 
+def _calibration_block(n_runs: int) -> dict:
+    """Build the calibration sub-response. Imported lazily to avoid a circular
+    dependency (backtest -> simulate.run -> _calibration_block -> backtest)."""
+    try:
+        from . import backtest  # local import is the cycle break
+        result = backtest.compute_wuhan_coverage()
+        return {
+            "monte_carlo_runs": n_runs,
+            "interval_coverage_holdout": float(result.coverage_p95),
+            "interval_coverage_p50": float(result.coverage_p50),
+            "holdout_count": result.holdout_count,
+            "scenario_id": result.scenario_id,
+            "reporting_fraction": result.reporting_fraction,
+            "note": (
+                "Coverage measured against JHU CSSE confirmed cases per country at "
+                "day 30 of the Wuhan-2020 backtest, deflated by the early-2020 "
+                "reporting-fraction prior."
+            ),
+        }
+    except Exception as exc:  # noqa: BLE001 - calibration should never break /simulate
+        return {
+            "monte_carlo_runs": n_runs,
+            "interval_coverage_holdout": None,
+            "note": f"Backtest harness unavailable: {exc}",
+        }
+
+
 @dataclass
 class SimParams:
     disease_id: str
@@ -236,11 +263,7 @@ def run(params: SimParams) -> dict:
         "top_imports": top_imports,
         "top_exports": top_exports,
         "spread_arcs": spread_arcs,
-        "calibration": {
-            "monte_carlo_runs": params.n_runs,
-            "interval_coverage_holdout": 0.93,  # placeholder until backtest harness lands
-            "note": "Coverage is a placeholder; replace with the backtest output once milestone H44 ships.",
-        },
+        "calibration": _calibration_block(params.n_runs),
         "params_used": {
             "disease_id": params.disease_id,
             "start_iso3": params.start_iso3,
