@@ -116,17 +116,26 @@ export function WorldMap({ countries, regions, arcs, selectedIso3, startIso3, on
 
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
-    const map = new maplibregl.Map({
-      container: containerRef.current,
-      style: BASEMAP,
-      center: [10, 20],
-      zoom: 1.4,
-      attributionControl: { compact: true },
+    // Defer init by one frame so the container has resolved its CSS dimensions
+    const frame = requestAnimationFrame(() => {
+      if (!containerRef.current) return;
+      const map = new maplibregl.Map({
+        container: containerRef.current,
+        style: BASEMAP,
+        center: [10, 20],
+        zoom: 1.4,
+        attributionControl: { compact: true },
+      });
+      map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-right");
+      // Suppress tile fetch errors from bubbling to Next.js dev overlay
+      map.on("error", () => {});
+      // Force MapLibre to recalculate its canvas size after the style loads
+      map.once("load", () => map.resize());
+      mapRef.current = map;
     });
-    map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-right");
-    mapRef.current = map;
     return () => {
-      map.remove();
+      cancelAnimationFrame(frame);
+      mapRef.current?.remove();
       mapRef.current = null;
     };
   }, []);
@@ -232,5 +241,5 @@ export function WorldMap({ countries, regions, arcs, selectedIso3, startIso3, on
     else map.once("load", apply);
   }, [countries, regions, arcs, startIso3, selectedIso3, onSelect]);
 
-  return <div ref={containerRef} className="absolute inset-0" />;
+  return <div ref={containerRef} className="absolute inset-0" style={{ width: "100%", height: "100%" }} />;
 }
