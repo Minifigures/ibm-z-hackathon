@@ -33,7 +33,16 @@ export type RegionResult = {
   prevalence_p50_per_100k: number;
   prevalence_p95_per_100k: number;
   cumulative_p50_final: number;
+  effective_distance_from_seed: number | null;
+  predicted_arrival_day: number | null;
+  variants_terminal_p50?: number[];
   quantiles: Quantiles;
+};
+
+export type ModelVariant = {
+  id: string;
+  label: string;
+  citation: string;
 };
 
 export type HubRow = {
@@ -62,8 +71,11 @@ export type SimulationResult = {
   calibration: {
     monte_carlo_runs: number;
     interval_coverage_holdout: number;
+    crps_norm_per_100k?: number;
+    multibin_log_score?: number;
     note: string;
   };
+  model_variants?: ModelVariant[];
   params_used: Record<string, number | string>;
 };
 
@@ -93,6 +105,36 @@ async function jsonFetch<T>(path: string, init?: RequestInit): Promise<T> {
   return res.json() as Promise<T>;
 }
 
+export type NowcastObservation = {
+  day: number;
+  cumulative_cases: number;
+};
+
+export type NowcastResult = {
+  horizon_days: number;
+  seed_iso3: string;
+  posterior_quantiles: Quantiles;
+  observations: NowcastObservation[];
+  posterior_summary: {
+    n_particles: number;
+    effective_sample_size: number;
+    r0_prior_median: number;
+    r0_posterior_median: number;
+    r0_posterior_95: [number, number];
+    rho_prior_range: [number, number];
+    rho_posterior_median: number;
+    rho_posterior_95: [number, number];
+  };
+  note: string;
+};
+
+export type NowcastRequest = SimulateRequest & {
+  observations: NowcastObservation[];
+  n_particles?: number;
+  rho_min?: number;
+  rho_max?: number;
+};
+
 export const api = {
   countries: () => jsonFetch<Country[]>("/countries"),
   presets: () => jsonFetch<Record<string, DiseasePreset>>("/presets"),
@@ -103,4 +145,6 @@ export const api = {
       method: "POST",
       body: JSON.stringify({ simulation, focus_iso3 }),
     }),
+  nowcast: (req: NowcastRequest) =>
+    jsonFetch<NowcastResult>("/nowcast", { method: "POST", body: JSON.stringify(req) }),
 };

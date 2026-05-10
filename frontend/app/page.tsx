@@ -4,14 +4,15 @@ import dynamic from "next/dynamic";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ForecastChart } from "@/components/forecast-chart";
 import { ExplainPanel } from "@/components/explain-panel";
-import { SDGBadge } from "@/components/sdg-badge";
 import { HubList } from "@/components/hub-list";
+import { NowcastPanel } from "@/components/nowcast-panel";
 import { SliderRow } from "@/components/slider-row";
-import { TimeScrubber } from "@/components/time-scrubber";
 import {
   api,
   type Country,
   type DiseasePreset,
+  type NowcastObservation,
+  type NowcastResult,
   type SimulateRequest,
   type SimulationResult,
 } from "@/lib/api";
@@ -19,6 +20,11 @@ import {
 const WorldMap = dynamic(() => import("@/components/world-map").then((m) => m.WorldMap), {
   ssr: false,
 });
+const PolarMap = dynamic(() => import("@/components/polar-map").then((m) => m.PolarMap), {
+  ssr: false,
+});
+
+type MapView = "geo" | "polar";
 
 const DEFAULT_REQ: SimulateRequest = {
   disease_id: "covid19",
@@ -41,14 +47,14 @@ export default function Page() {
   const [req, setReq] = useState<SimulateRequest>(DEFAULT_REQ);
   const [result, setResult] = useState<SimulationResult | null>(null);
   const [selectedIso3, setSelectedIso3] = useState<string | null>(null);
-  const [lockedIso3, setLockedIso3] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [latencyMs, setLatencyMs] = useState<number | null>(null);
   const [explainText, setExplainText] = useState<string | null>(null);
   const [explainSource, setExplainSource] = useState<string | null>(null);
   const [explainLoading, setExplainLoading] = useState(false);
-  const [currentDay, setCurrentDay] = useState<number | null>(null);
-  const [playing, setPlaying] = useState(false);
+  const [mapView, setMapView] = useState<MapView>("geo");
+  const [nowcastResult, setNowcastResult] = useState<NowcastResult | null>(null);
+  const [nowcastLoading, setNowcastLoading] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -78,22 +84,7 @@ export default function Page() {
     };
   }, [req, runSimulation]);
 
-  // Clamp the scrubber to the new horizon when it changes.
-  useEffect(() => {
-    setCurrentDay((day) => (day == null ? null : Math.min(day, req.horizon_days)));
-  }, [req.horizon_days]);
-
   const update = (patch: Partial<SimulateRequest>) => setReq((cur) => ({ ...cur, ...patch }));
-
-  // Hover preview: only updates selection while nothing is locked.
-  const handleHover = useCallback((iso3: string) => {
-    setSelectedIso3((prev) => (lockedIso3 ? prev : iso3));
-  }, [lockedIso3]);
-  // Click locks (or clicking empty / passing null clears the lock).
-  const handlePick = useCallback((iso3: string | null) => {
-    setLockedIso3(iso3);
-    setSelectedIso3(iso3);
-  }, []);
 
   const onPickPreset = (id: string) => {
     const p = presets[id];
@@ -127,16 +118,38 @@ export default function Page() {
     return result.regions.find((r) => r.iso3 === selectedIso3) ?? null;
   }, [result, selectedIso3]);
 
-  const allHubs = useMemo(() => {
-    if (!result) return [];
-    return result.regions
-      .map((r) => ({
-        iso3: r.iso3,
-        name: r.name,
-        expected_cases: r.cumulative_p50_final,
-      }))
-      .sort((a, b) => b.expected_cases - a.expected_cases);
-  }, [result]);
+  const runNowcast = async (observations: NowcastObservation[]) => {
+    setNowcastLoading(true);
+    try {
+      const r = await api.nowcast({ ...req, observations });
+      setNowcastResult(r);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setNowcastLoading(false);
+    }
+  };
+
+  // Invalidate any prior posterior whenever the user moves a slider or
+  // changes origin -- otherwise we'd be overlaying stale posteriors on a
+  // freshly re-simulated prior.
+  useEffect(() => {
+    setNowcastResult(null);
+  }, [
+    req.disease_id,
+    req.start_iso3,
+    req.r0,
+    req.incubation_days,
+    req.infectious_days,
+    req.air_weight,
+    req.port_weight,
+    req.travel_restriction,
+    req.mask_intervention,
+    req.horizon_days,
+  ]);
+
+  const showPosteriorOnFocus =
+    nowcastResult !== null && focusRegion?.iso3 === req.start_iso3;
 
   const focusName = focusRegion?.name ?? null;
   const calibration = result?.calibration;
@@ -156,9 +169,32 @@ export default function Page() {
             sim: <span className="font-mono text-slate-200">{busy ? "…" : `${latencyMs?.toFixed(0) ?? "..."} ms`}</span>
           </span>
           {calibration ? (
-            <span className="rounded border border-accent/40 px-2 py-0.5 text-accent">
-              {(calibration.interval_coverage_holdout * 100).toFixed(0)}% coverage on holdout
-            </span>
+            <div
+              className="flex items-center gap-1 text-[11px]"
+              title={calibration.note}
+            >
+              <span className="rounded border border-accent/40 px-2 py-0.5 text-accent">
+                {(calibration.interval_coverage_holdout * 100).toFixed(0)}% cov₉₅
+              </span>
+              {typeof calibration.crps_norm_per_100k === "number" &&
+              Number.isFinite(calibration.crps_norm_per_100k) ? (
+                <span
+                  className="rounded border border-slate-600 px-2 py-0.5 text-slate-200"
+                  title="CRPS per 100k (Funk 2018) — lower is better"
+                >
+                  CRPS {calibration.crps_norm_per_100k.toFixed(2)}/100k
+                </span>
+              ) : null}
+              {typeof calibration.multibin_log_score === "number" &&
+              Number.isFinite(calibration.multibin_log_score) ? (
+                <span
+                  className="rounded border border-slate-600 px-2 py-0.5 text-slate-200"
+                  title="Multibin log score (Reich 2019 / FluSight) — higher is better"
+                >
+                  log {calibration.multibin_log_score.toFixed(2)}
+                </span>
+              ) : null}
+            </div>
           ) : null}
         </div>
       </header>
@@ -300,52 +336,55 @@ export default function Page() {
       </aside>
 
       <section className="row-start-2 relative">
-        <SDGBadge />
         <div className="absolute inset-0">
-          <WorldMap
-            countries={countries}
-            regions={result?.regions ?? []}
-            arcs={result?.spread_arcs ?? []}
-            startIso3={req.start_iso3}
-            selectedIso3={selectedIso3}
-            lockedIso3={lockedIso3}
-            onHover={handleHover}
-            onPick={handlePick}
-            currentDay={currentDay}
-          />
+          {mapView === "geo" ? (
+            <WorldMap
+              countries={countries}
+              regions={result?.regions ?? []}
+              arcs={result?.spread_arcs ?? []}
+              startIso3={req.start_iso3}
+              selectedIso3={selectedIso3}
+              onSelect={setSelectedIso3}
+            />
+          ) : (
+            <PolarMap
+              countries={countries}
+              regions={result?.regions ?? []}
+              arcs={result?.spread_arcs ?? []}
+              startIso3={req.start_iso3}
+              selectedIso3={selectedIso3}
+              onSelect={setSelectedIso3}
+            />
+          )}
         </div>
 
-        <div className="absolute bottom-0 left-0 right-0 flex flex-col gap-2 p-3 pointer-events-none">
-          <div className="pointer-events-auto">
-            <TimeScrubber
-              horizonDays={req.horizon_days}
-              currentDay={currentDay}
-              playing={playing}
-              onScrub={(d) => setCurrentDay(d)}
-              onPlayToggle={() => {
-                if (playing) {
-                  setPlaying(false);
-                } else {
-                  if (currentDay == null || currentDay >= req.horizon_days) setCurrentDay(0);
-                  setPlaying(true);
-                }
-              }}
-              onLive={() => {
-                setPlaying(false);
-                setCurrentDay(null);
-              }}
-            />
-          </div>
-          <div className="grid grid-cols-3 gap-3">
+        <div className="pointer-events-none absolute right-3 top-3 flex gap-1 rounded border border-ink-600 bg-ink-800/90 p-0.5 text-[11px] backdrop-blur">
+          <button
+            onClick={() => setMapView("geo")}
+            className={`pointer-events-auto rounded px-2 py-1 ${
+              mapView === "geo" ? "bg-accent/20 text-accent" : "text-slate-300 hover:text-slate-100"
+            }`}
+          >
+            Geo
+          </button>
+          <button
+            onClick={() => setMapView("polar")}
+            className={`pointer-events-auto rounded px-2 py-1 ${
+              mapView === "polar" ? "bg-accent/20 text-accent" : "text-slate-300 hover:text-slate-100"
+            }`}
+            title="Effective-distance polar projection (Brockmann & Helbing 2013)"
+          >
+            Polar (d_eff)
+          </button>
+        </div>
+
+        <div className="absolute bottom-0 left-0 right-0 grid grid-cols-3 gap-3 p-3 pointer-events-none">
           <div className="pointer-events-auto">
             <HubList
-              title="All countries (median cumulative cases)"
-              rows={allHubs}
+              title="Top import hubs (median expected cases)"
+              rows={result?.top_imports ?? []}
               valueKey="expected_cases"
-              onHover={handleHover}
-              onPick={handlePick}
-              selectedIso3={selectedIso3}
-              maxHeight="260px"
+              onSelect={setSelectedIso3}
             />
           </div>
           <div className="pointer-events-auto">
@@ -353,6 +392,12 @@ export default function Page() {
               <ForecastChart
                 title={`Forecast · ${focusRegion.name}`}
                 quantiles={focusRegion.quantiles}
+                predictedArrivalDay={focusRegion.predicted_arrival_day}
+                effectiveDistance={focusRegion.effective_distance_from_seed}
+                variantsTerminalP50={focusRegion.variants_terminal_p50}
+                variantMeta={result?.model_variants}
+                posteriorQuantiles={showPosteriorOnFocus ? nowcastResult!.posterior_quantiles : null}
+                observations={showPosteriorOnFocus ? nowcastResult!.observations : null}
               />
             ) : (
               <div className="rounded-md border border-ink-600 bg-ink-800 p-3 text-xs text-slate-500">
@@ -361,7 +406,7 @@ export default function Page() {
               </div>
             )}
           </div>
-          <div className="pointer-events-auto">
+          <div className="pointer-events-auto space-y-2">
             <ExplainPanel
               text={explainText}
               source={explainSource}
@@ -369,7 +414,13 @@ export default function Page() {
               onRequest={onExplain}
               focusName={focusName}
             />
-          </div>
+            <NowcastPanel
+              loading={nowcastLoading}
+              result={nowcastResult}
+              onRun={runNowcast}
+              onClear={() => setNowcastResult(null)}
+              seedIso3={req.start_iso3}
+            />
           </div>
         </div>
       </section>
