@@ -21,8 +21,14 @@ def _sim():
     )
 
 
+def _clear_watsonx_env(monkeypatch):
+    monkeypatch.delenv("WATSONX_APIKEY", raising=False)
+    monkeypatch.delenv("WATSONX_PROJECT_ID", raising=False)
+    monkeypatch.delenv("WATSONX_URL", raising=False)
+
+
 def test_template_fallback_with_focus(monkeypatch):
-    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+    _clear_watsonx_env(monkeypatch)
     sim = _sim()
     iso3 = sim["top_imports"][0]["iso3"]
     out = explain(sim, focus_iso3=iso3)
@@ -31,7 +37,7 @@ def test_template_fallback_with_focus(monkeypatch):
 
 
 def test_template_fallback_without_focus(monkeypatch):
-    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+    _clear_watsonx_env(monkeypatch)
     sim = _sim()
     out = explain(sim, focus_iso3=None)
     assert out["source"] == "template"
@@ -41,7 +47,7 @@ def test_template_fallback_without_focus(monkeypatch):
 
 
 def test_template_handles_unknown_focus(monkeypatch):
-    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+    _clear_watsonx_env(monkeypatch)
     sim = _sim()
     out = explain(sim, focus_iso3="ZZZ")
     # Falls through to the global summary path without raising.
@@ -49,10 +55,20 @@ def test_template_handles_unknown_focus(monkeypatch):
     assert len(out["text"]) > 0
 
 
-def test_anthropic_path_falls_back_when_sdk_missing(monkeypatch):
-    monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-ant-fake")
+def test_template_fallback_when_only_apikey_set(monkeypatch):
+    # Both WATSONX_APIKEY and WATSONX_PROJECT_ID are required; one is not enough.
+    _clear_watsonx_env(monkeypatch)
+    monkeypatch.setenv("WATSONX_APIKEY", "fake-key")
+    sim = _sim()
+    out = explain(sim, focus_iso3=None)
+    assert out["source"] == "template"
+
+
+def test_watsonx_path_falls_back_when_sdk_missing(monkeypatch):
+    monkeypatch.setenv("WATSONX_APIKEY", "fake-key")
+    monkeypatch.setenv("WATSONX_PROJECT_ID", "fake-project")
     import sys
-    monkeypatch.setitem(sys.modules, "anthropic", None)  # force ImportError
+    monkeypatch.setitem(sys.modules, "ibm_watsonx_ai", None)  # force ImportError
     sim = _sim()
     out = explain(sim, focus_iso3=None)
     assert out["source"] == "template"

@@ -22,12 +22,14 @@ API: <http://localhost:8000/docs>
 - `POST /simulate`  run the full pipeline; returns per-region quantile bands, top hubs, spread arcs
 - `POST /explain`  LLM narrative for the simulation result
 
-## Anthropic key (optional)
+## watsonx.ai credentials (optional)
 
-Set `ANTHROPIC_API_KEY` to enable the Claude-Haiku explainer. Without it, `/explain` returns a deterministic templated paragraph so the demo never breaks.
+Set `WATSONX_APIKEY` and `WATSONX_PROJECT_ID` to enable the IBM watsonx.ai (Granite 3.3 8B Instruct) explainer. Without them, `/explain` returns a deterministic templated paragraph so the demo never breaks. `WATSONX_URL` defaults to `https://us-south.ml.cloud.ibm.com`; override it if your project lives in another region.
 
 ```bash
-export ANTHROPIC_API_KEY=sk-ant-...
+export WATSONX_APIKEY=...           # IBM Cloud IAM API key
+export WATSONX_PROJECT_ID=...       # watsonx.ai project ID
+export WATSONX_URL=https://us-south.ml.cloud.ibm.com  # optional
 ```
 
 ## File map
@@ -37,7 +39,7 @@ app/
   main.py         FastAPI entry, request/response schemas
   simulate.py     SEIR ODE integrator + Monte Carlo loop
   mobility.py     Gravity OD matrix (air + sea), distance utilities
-  explain.py      Anthropic call + templated fallback
+  explain.py      watsonx.ai (Granite 3.3) call + templated fallback
   data/
     countries.json   ~70 countries, lat/lng/population/hub index
     diseases.json    presets for COVID-19, Flu, Mpox, Pathogen X

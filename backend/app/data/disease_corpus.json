@@ -1,0 +1,92 @@
+[
+  {
+    "disease": "COVID-19",
+    "aliases": ["covid", "covid-19", "sars-cov-2", "novel coronavirus", "coronavirus 2019"],
+    "source": "WHO COVID-19 technical brief 2024; Liu et al. 2020 J Travel Med",
+    "text": "COVID-19 is the disease caused by SARS-CoV-2. The basic reproduction number for the ancestral strain is most commonly estimated near 2.5 with literature ranges of 2.0 to 3.0; Omicron sublineages have been estimated higher, in the 7 to 10 range. Median incubation period is approximately 5 days. Mean infectious period for ancestral strain is 6 to 7 days. Crude case fatality ratio worldwide hovers around 1 percent but varies sharply by age, vaccination status, and variant."
+  },
+  {
+    "disease": "Seasonal Influenza",
+    "aliases": ["flu", "influenza", "seasonal flu", "h1n1", "h3n2"],
+    "source": "Biggerstaff et al. 2014 BMC Infect Dis; CDC Flu Burden 2024",
+    "text": "Seasonal influenza A and B viruses circulate annually. Median basic reproduction number across pooled studies is approximately 1.3 to 1.4. Incubation period is short, typically 1 to 4 days with median 2 days. Infectious period is approximately 4 to 5 days. Population-weighted case fatality ratio is approximately 0.1 percent but rises steeply in adults over 65."
+  },
+  {
+    "disease": "Mpox",
+    "aliases": ["monkeypox", "mpx", "mpxv", "mpox clade i", "mpox clade ii"],
+    "source": "Du et al. 2022 Lancet Reg Health Eur; WHO Mpox 2024 update",
+    "text": "Mpox is caused by monkeypox virus. Clade IIb (responsible for the 2022 global outbreak) shows R0 estimates around 1.6 in dense sexual networks and below 1 in the general population. Incubation period median is approximately 9 days, with reports spanning 7 to 14 days. Infectious period is roughly 14 to 21 days from rash onset. Clade IIb case fatality is below 1 percent; Clade I (DRC) historically reaches 5 to 10 percent."
+  },
+  {
+    "disease": "Ebola virus disease",
+    "aliases": ["ebola", "ebov", "evd", "ebola zaire", "ebola sudan"],
+    "source": "WHO Ebola fact sheet 2023; Althaus 2014 PLoS Curr",
+    "text": "Ebola virus disease is caused by Ebolavirus species, most commonly Zaire ebolavirus. Basic reproduction number in West Africa 2014-2016 outbreak settings was estimated near 1.5 to 2.0. Median incubation period is approximately 8 to 10 days (range 2 to 21). Mean infectious period from symptom onset is approximately 7 days. Untreated case fatality ratio averages 50 percent across outbreaks, with literature spanning 25 to 90 percent depending on strain and care."
+  },
+  {
+    "disease": "Marburg virus disease",
+    "aliases": ["marburg", "marv", "mvd"],
+    "source": "WHO Marburg fact sheet 2023; Roddy et al. 2010 J Infect Dis",
+    "text": "Marburg virus disease is caused by Marburgvirus, a filovirus closely related to Ebolavirus. Reported R0 in cluster outbreaks is estimated near 1.2 to 1.6. Median incubation period is 5 to 10 days. Infectious period from onset is approximately 7 to 9 days. Case fatality ratio is high, averaging approximately 50 percent and reaching 88 percent in some outbreaks."
+  },
+  {
+    "disease": "SARS",
+    "aliases": ["sars", "sars-cov-1", "severe acute respiratory syndrome"],
+    "source": "Lipsitch et al. 2003 Science; WHO SARS consensus document",
+    "text": "Severe acute respiratory syndrome (SARS) is caused by SARS-CoV-1, the first identified SARS coronavirus. Pre-intervention basic reproduction number was estimated near 3. Median incubation period is approximately 4 to 6 days. Mean infectious period is approximately 5 days. Crude case fatality ratio across the 2003 outbreak was approximately 10 percent, rising sharply with age."
+  },
+  {
+    "disease": "MERS",
+    "aliases": ["mers", "mers-cov", "middle east respiratory syndrome"],
+    "source": "Cauchemez et al. 2014 Lancet ID; WHO MERS-CoV update 2023",
+    "text": "Middle East respiratory syndrome coronavirus (MERS-CoV) shows sustained R0 below 1 in most settings, with hospital-amplified clusters approaching 1 to 2. Median incubation period is approximately 5 to 7 days (range 2 to 14). Mean infectious period is approximately 5 days. Reported case fatality ratio is approximately 35 percent."
+  },
+  {
+    "disease": "Smallpox",
+    "aliases": ["smallpox", "variola", "variola major", "variola minor"],
+    "source": "Gani and Leach 2001 Nature; WHO Smallpox eradication report",
+    "text": "Smallpox was caused by Variola major virus and was eradicated globally in 1980. Basic reproduction number estimates from historical data are approximately 5 to 7 in unvaccinated populations. Median incubation period is approximately 12 days (range 7 to 17). Mean infectious period from onset of rash is approximately 7 days. Case fatality ratio for Variola major was approximately 30 percent."
+  },
+  {
+    "disease": "Measles",
+    "aliases": ["measles", "rubeola", "morbillivirus"],
+    "source": "Guerra et al. 2017 Lancet ID; CDC Pinkbook Measles",
+    "text": "Measles is caused by measles virus, a paramyxovirus. It is one of the most contagious infections known, with basic reproduction number commonly cited at 12 to 18 in fully susceptible populations. Median incubation period is approximately 10 to 12 days. Infectious period is approximately 8 days, spanning 4 days before to 4 days after rash onset. Case fatality ratio in low-resource settings is approximately 0.2 to 1 percent."
+  },
+  {
+    "disease": "Polio",
+    "aliases": ["polio", "poliomyelitis", "poliovirus"],
+    "source": "Eichner and Dietz 1996 Am J Epidemiol",
+    "text": "Poliomyelitis is caused by poliovirus types 1, 2, and 3. Basic reproduction number is estimated near 5 to 7 in fully susceptible populations. Median incubation period for paralytic disease is approximately 7 to 14 days. Fecal shedding (infectious period) commonly continues for 2 to 3 weeks. Case fatality ratio of paralytic polio is approximately 2 to 5 percent in children, higher in adults."
+  },
+  {
+    "disease": "Lassa fever",
+    "aliases": ["lassa", "lassa fever", "lasv"],
+    "source": "WHO Lassa fact sheet 2024; Iacono et al. 2015 PLoS NTD",
+    "text": "Lassa fever is caused by Lassa virus, an Old World arenavirus endemic in West Africa. Person-to-person R0 is low, generally below 1.5 outside healthcare amplification. Incubation period spans 6 to 21 days with median around 10. Infectious period after symptom onset is approximately 14 days. Overall case fatality ratio is approximately 1 percent across infections, but reaches 15 to 20 percent among hospitalized patients."
+  },
+  {
+    "disease": "Nipah virus",
+    "aliases": ["nipah", "niv", "nipah virus encephalitis"],
+    "source": "Luby 2013 Antiviral Res; WHO Nipah technical brief",
+    "text": "Nipah virus is a zoonotic henipavirus with sporadic human-to-human transmission documented in Bangladesh and India. Reported R0 is below 1, generally near 0.5. Incubation period spans 4 to 14 days with median around 7. Infectious period from symptom onset is approximately 7 days. Case fatality ratio across reported outbreaks ranges from 40 to 75 percent."
+  },
+  {
+    "disease": "Zika",
+    "aliases": ["zika", "zikv", "zika virus"],
+    "source": "Funk et al. 2016 PLoS NTD; WHO Zika technical guidance",
+    "text": "Zika virus is a flavivirus transmitted primarily by Aedes mosquitoes with secondary sexual and vertical transmission. Vector-mediated R0 estimates from the 2015-2016 Americas outbreak range from 2 to 3. Median incubation period is approximately 3 to 14 days. Viraemic infectious window for vector pickup is approximately 5 to 7 days. Direct case fatality ratio is below 0.1 percent; congenital syndrome is the principal harm."
+  },
+  {
+    "disease": "Dengue",
+    "aliases": ["dengue", "denv", "dengue fever", "break-bone fever"],
+    "source": "Liu-Helmersson et al. 2014 PLoS One; WHO Dengue 2024 update",
+    "text": "Dengue is caused by four serotypes of dengue virus transmitted by Aedes mosquitoes. Effective R0 in endemic urban settings ranges from 3 to 5 during outbreak periods. Median intrinsic incubation period is approximately 5 to 7 days (range 4 to 10). Viraemic infectious period is approximately 5 days. Untreated case fatality for severe dengue can reach 20 percent; with proper care, total CFR is below 1 percent."
+  },
+  {
+    "disease": "Cholera",
+    "aliases": ["cholera", "vibrio cholerae"],
+    "source": "Mukandavire et al. 2011 PNAS; WHO Cholera fact sheet 2024",
+    "text": "Cholera is an acute diarrheal infection caused by Vibrio cholerae bacteria, typically transmitted via contaminated water. Basic reproduction number in outbreak settings ranges from 1.1 to 2.7 depending on water and sanitation conditions. Incubation period is short, typically 12 hours to 5 days, with median around 2 days. Infectious shedding continues approximately 7 to 14 days. Untreated severe cholera can have CFR above 50 percent; with rehydration therapy, CFR drops below 1 percent."
+  }
+]

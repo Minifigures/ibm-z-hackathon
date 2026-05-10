@@ -1,18 +1,18 @@
 """LLM explainer for simulation outputs.
 
-Calls the Anthropic API when ANTHROPIC_API_KEY is present, falls back to a
-deterministic templated explanation otherwise so the demo never breaks. The
-prompt is designed to be auditable: the model is given the equation labels
-and the numeric outputs and is asked to translate them into 1 to 2 short
-paragraphs of plain English.
+Calls IBM watsonx.ai (via the shared `watsonx_client`) when credentials are
+present, falls back to a deterministic templated explanation otherwise so
+the demo never breaks. The prompt is designed to be auditable: the model is
+given the equation labels and the numeric outputs and is asked to translate
+them into 1 to 2 short paragraphs of plain English.
 """
 
 from __future__ import annotations
 
-import os
 from typing import Any
 
-EXPLAINER_MODEL = "claude-haiku-4-5-20251001"
+from . import watsonx_client
+
 SYSTEM_PROMPT = (
     "You are a public-health analyst assistant. Translate disease-spread "
     "simulator outputs into a tight, defensible 1-2 paragraph explanation "
@@ -89,14 +89,24 @@ def _template_fallback(simulation: dict[str, Any], focus_iso3: str | None) -> st
     )
 
 
+def _extract_text(response: Any) -> str:
+    if isinstance(response, dict):
+        choices = response.get("choices") or []
+        if choices:
+            content = choices[0].get("message", {}).get("content")
+            if isinstance(content, str):
+                return content
+            if isinstance(content, list):
+                return "".join(p.get("text", "") for p in content if isinstance(p, dict))
+    return str(response or "")
+
+
 def explain(simulation: dict[str, Any], focus_iso3: str | None = None) -> dict[str, str]:
-    api_key = os.environ.get("ANTHROPIC_API_KEY", "").strip()
-    if not api_key:
+    if not watsonx_client.is_configured():
         return {"text": _template_fallback(simulation, focus_iso3), "source": "template"}
 
-    try:
-        import anthropic
-    except ImportError:
+    chat = watsonx_client.get_chat_model()
+    if chat is None:
         return {"text": _template_fallback(simulation, focus_iso3), "source": "template"}
 
     user_text = (
@@ -107,15 +117,15 @@ def explain(simulation: dict[str, Any], focus_iso3: str | None = None) -> dict[s
     )
 
     try:
-        client = anthropic.Anthropic(api_key=api_key)
-        msg = client.messages.create(
-            model=EXPLAINER_MODEL,
-            max_tokens=400,
-            system=SYSTEM_PROMPT,
-            messages=[{"role": "user", "content": user_text}],
+        response = chat.chat(
+            messages=[
+                {"role": "system", "content": SYSTEM_PROMPT},
+                {"role": "user", "content": user_text},
+            ],
+            params={"max_tokens": 400, "temperature": 0.3},
         )
-        text = "".join(part.text for part in msg.content if getattr(part, "type", None) == "text")
-        return {"text": text.strip(), "source": "anthropic"}
+        text = _extract_text(response).strip()
+        return {"text": text, "source": "watsonx"}
     except Exception as exc:  # noqa: BLE001 - graceful degradation for the demo
         return {
             "text": _template_fallback(simulation, focus_iso3),

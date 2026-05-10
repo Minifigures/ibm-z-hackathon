@@ -34,14 +34,14 @@ describe("ExplainPanel", () => {
     render(
       <ExplainPanel
         text="Madrid is exposed via gravity from BRA."
-        source="anthropic"
+        source="watsonx"
         loading={false}
         onRequest={() => {}}
         focusName="Madrid"
       />,
     );
     expect(screen.getByText(/gravity from BRA/)).toBeInTheDocument();
-    expect(screen.getByText(/Claude Haiku/)).toBeInTheDocument();
+    expect(screen.getByText(/watsonx\.ai Granite 3\.3/)).toBeInTheDocument();
   });
 
   it("disables the button while loading and surfaces the loading label", () => {

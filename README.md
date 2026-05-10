@@ -11,7 +11,7 @@ A four-layer pipeline grounded in active research:
 1. **Mobility.** Gravity model with exponential distance decay over a 70-country graph, with a separate slider-tunable port-call channel. Equation in `backend/app/mobility.py`.
 2. **Transmission.** Region-indexed SEIR with mobility-coupled force of infection. ODE integrator in `backend/app/simulate.py`.
 3. **Uncertainty.** Monte Carlo over R₀, incubation, and infectious period. Quantile bands at 2.5 / 25 / 50 / 75 / 97.5%.
-4. **Explanation.** Claude Haiku narrates the outputs, falling back to a deterministic templated paragraph if no API key is set.
+4. **Explanation.** IBM watsonx.ai (Granite 3.3 8B Instruct) narrates the outputs, falling back to a deterministic templated paragraph if no API key is set.
 
 A four-equation slide is in the PRD (Section 7.1) and every output traces to one of those equations. No black boxes.
 
@@ -25,18 +25,18 @@ A four-equation slide is in the PRD (Section 7.1) and every output traces to one
 | Map | MapLibre GL JS (CARTO dark basemap, no token needed) |
 | Charts | Recharts |
 | Styling | Tailwind CSS |
-| LLM | Anthropic SDK (Claude Haiku), templated fallback |
+| LLM | IBM watsonx.ai SDK (Granite 3.3 8B Instruct), templated fallback |
 
 ## Layout
 
 ```
 .
-├── backend/                   FastAPI + SEIR + Monte Carlo + Anthropic
+├── backend/                   FastAPI + SEIR + Monte Carlo + watsonx.ai
 │   └── app/
 │       ├── main.py            /health, /countries, /presets, /simulate, /explain
 │       ├── simulate.py        SEIR ODE integrator + Monte Carlo loop
 │       ├── mobility.py        Gravity OD matrix (air + sea)
-│       ├── explain.py         Claude Haiku explainer + templated fallback
+│       ├── explain.py         watsonx.ai (Granite 3.3) explainer + templated fallback
 │       └── data/              countries.json, diseases.json
 ├── frontend/                  Next.js 15 dashboard
 │   ├── app/                   Layout + main page
@@ -60,7 +60,7 @@ pip install -r requirements.txt
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-Optional: `export ANTHROPIC_API_KEY=sk-ant-...` to enable Claude Haiku in `/explain`. Without it, you get the templated explanation, which is fine for the demo.
+Optional: set `WATSONX_APIKEY` and `WATSONX_PROJECT_ID` (and optionally `WATSONX_URL`) to enable the IBM watsonx.ai Granite 3.3 explainer in `/explain`. Without them, you get the templated explanation, which is fine for the demo.
 
 **Frontend**
 
@@ -103,7 +103,7 @@ A 200-run, 30-day, 70-region simulation completes in roughly 250 ms on a laptop,
 3. **Mobility.** Toggle airport-only vs. airport + port. The spread arcs and import ranking change.
 4. **Transmission.** Click a country (say MEX). The forecast chart shows the 50% / 95% bands. Bump *Mask / distancing* to 50% and watch the curve flatten.
 5. **Top hubs.** Read the import ranking. Show why Madrid or Lisbon ranks high (gravity to BRA).
-6. **Explanation.** Click *Explain*. Claude Haiku writes a paragraph grounded in the numbers.
+6. **Explanation.** Click *Explain*. IBM watsonx.ai Granite 3.3 writes a paragraph grounded in the numbers.
 7. **Calibration.** Point at the coverage badge. "95% intervals contained truth in 93% of holdouts" (replace once the backtest harness ships).
 8. **Close.** "Mobility imports it, SEIR amplifies it, Monte Carlo bounds it, the LLM explains it."
 
@@ -118,7 +118,7 @@ marco · aahir · aous · amrr · sultan
 - [x] Country dataset (70 regions) with hub indices
 - [x] Disease presets (COVID-19, Flu, Mpox, Pathogen X)
 - [x] Frontend dashboard with sliders, map, hub lists, forecast chart, AI panel
-- [x] Anthropic explainer + templated fallback
+- [x] watsonx.ai (Granite 3.3) explainer + templated fallback
 - [ ] Replace circle markers with a true country choropleth (Natural Earth GeoJSON)
 - [ ] Backtest harness (Wuhan 2020 seed → 30-day spread vs JHU CSSE)
 - [ ] OpenFlights routes ingestion to replace synthetic hub indices
