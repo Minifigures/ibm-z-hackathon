@@ -36,6 +36,8 @@ describe("DiseaseSearch", () => {
         sources: ["WHO 2024"],
         confidence: "high",
         notes: "Test.",
+        likely_origin_iso3: "NGA",
+        likely_origin_reason: "Filovirus outbreak history.",
       },
       retrieved: [],
       cached: false,

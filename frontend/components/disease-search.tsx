@@ -68,10 +68,10 @@ export function DiseaseSearch({ onApply }: Props) {
         <p className="text-[11px] text-slate-500">
           Loaded <span className="text-slate-300">{last.params.label}</span>
           <span> · {last.params.confidence} confidence</span>
-          {last.cached ? <span> · cached</span> : null}
-          {last.retrieved.length > 0 && last.retrieved[0].disease ? (
-            <span> · top match: {last.retrieved[0].disease}</span>
+          {last.params.likely_origin_iso3 ? (
+            <span> · origin → <span className="text-accent">{last.params.likely_origin_iso3}</span></span>
           ) : null}
+          {last.cached ? <span> · cached</span> : null}
         </p>
       ) : null}
     </div>

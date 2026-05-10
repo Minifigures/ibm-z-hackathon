@@ -90,13 +90,17 @@ export default function Page() {
   };
 
   const onAutoFill = (p: DiseaseParams) => {
-    update({
+    const patch: Partial<SimulateRequest> = {
       disease_id: "pathogenx",
       r0: p.r0,
       incubation_days: p.incubation_days,
       infectious_days: p.infectious_days,
       cfr_pct: p.cfr_pct,
-    });
+    };
+    if (p.likely_origin_iso3 && countries.some((c) => c.iso3 === p.likely_origin_iso3)) {
+      patch.start_iso3 = p.likely_origin_iso3;
+    }
+    update(patch);
   };
 
   const onExplain = async () => {

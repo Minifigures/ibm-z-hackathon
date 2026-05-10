@@ -102,6 +102,8 @@ export type DiseaseParams = {
   sources: string[];
   confidence: "high" | "medium" | "low";
   notes: string;
+  likely_origin_iso3: string | null;
+  likely_origin_reason: string;
 };
 
 export type RetrievedPassage = {

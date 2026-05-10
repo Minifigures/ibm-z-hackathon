@@ -3,11 +3,13 @@ from unittest.mock import MagicMock
 from app import disease_lookup, watsonx_client
 
 
-def _good_payload(label="Test Pox", r0=2.0, incubation=5, infectious=7, cfr=1.0):
+def _good_payload(label="Test Pox", r0=2.0, incubation=5, infectious=7, cfr=1.0, origin="USA"):
     return (
         '{"label":"%s","r0":%s,"incubation_days":%s,"infectious_days":%s,'
-        '"cfr_pct":%s,"sources":["WHO 2024"],"confidence":"high","notes":"Test entry."}'
-        % (label, r0, incubation, infectious, cfr)
+        '"cfr_pct":%s,"sources":["WHO 2024"],"confidence":"high","notes":"Test entry.",'
+        '"likely_origin_iso3":%s,"likely_origin_reason":"Test origin."}'
+        % (label, r0, incubation, infectious, cfr,
+           f'"{origin}"' if origin else "null")
     )
 
 
@@ -96,6 +98,36 @@ def test_happy_path_returns_validated_params(monkeypatch):
     assert out["cached"] is False
     assert isinstance(out["retrieved"], list)
     assert len(out["retrieved"]) > 0
+
+
+def test_drops_unknown_origin_iso3_without_rejecting(monkeypatch):
+    monkeypatch.setenv("WATSONX_APIKEY", "fake")
+    monkeypatch.setenv("WATSONX_PROJECT_ID", "fake")
+    fake_chat = MagicMock()
+    # ZZZ is not in the modelled countries list
+    fake_chat.chat.return_value = _wrap(_good_payload(origin="ZZZ"))
+    fake_emb, _ = _fake_emb_for_corpus()
+    monkeypatch.setattr(watsonx_client, "get_chat_model", lambda: fake_chat)
+    monkeypatch.setattr(watsonx_client, "get_embedding_model", lambda: fake_emb)
+
+    out = disease_lookup.lookup("test-pox")
+    assert out["status"] == "ok"
+    assert out["params"]["likely_origin_iso3"] is None
+    assert out["params"]["likely_origin_reason"] == ""
+
+
+def test_keeps_valid_origin_iso3(monkeypatch):
+    monkeypatch.setenv("WATSONX_APIKEY", "fake")
+    monkeypatch.setenv("WATSONX_PROJECT_ID", "fake")
+    fake_chat = MagicMock()
+    fake_chat.chat.return_value = _wrap(_good_payload(origin="BRA"))
+    fake_emb, _ = _fake_emb_for_corpus()
+    monkeypatch.setattr(watsonx_client, "get_chat_model", lambda: fake_chat)
+    monkeypatch.setattr(watsonx_client, "get_embedding_model", lambda: fake_emb)
+
+    out = disease_lookup.lookup("zika")
+    assert out["status"] == "ok"
+    assert out["params"]["likely_origin_iso3"] == "BRA"
 
 
 def test_caches_repeat_lookups_case_insensitively(monkeypatch):
