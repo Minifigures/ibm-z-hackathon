@@ -119,7 +119,16 @@ def _template_fallback(simulation: dict[str, Any], focus_iso3: str | None) -> st
             f"Tighter measures would compound non-linearly via the SEIR transmission term."
         )
 
-    top = simulation["top_imports"][:3]
+    top = simulation.get("top_imports") or []
+    if not top:
+        return (
+            f"With R0 around {p['r0_median']:.1f} the {simulation['horizon_days']}-day "
+            f"forecast has not yet routed enough cases out of {p['start_iso3']} to rank "
+            f"any specific destination as a meaningful import hub at the current Monte "
+            f"Carlo run count. Try raising R0 or extending the forecast horizon to surface "
+            f"the dominant air-route corridors."
+        )
+    top = top[:3]
     names = ", ".join(t["name"] for t in top)
     return (
         f"With R0 around {p['r0_median']:.1f} and the current sliders, the highest-risk import "
