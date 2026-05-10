@@ -84,6 +84,12 @@
     "text": "Dengue is caused by four serotypes of dengue virus transmitted by Aedes mosquitoes. Effective R0 in endemic urban settings ranges from 3 to 5 during outbreak periods. Median intrinsic incubation period is approximately 5 to 7 days (range 4 to 10). Viraemic infectious period is approximately 5 days. Untreated case fatality for severe dengue can reach 20 percent; with proper care, total CFR is below 1 percent."
   },
   {
+    "disease": "Hantavirus",
+    "aliases": ["hantavirus", "hanta", "hps", "hfrs", "sin nombre", "snv", "andes virus", "andv", "hantaan", "htnv", "seoul virus", "seov", "puumala", "puuv", "dobrava", "choclo", "hantavirus pulmonary syndrome", "hemorrhagic fever with renal syndrome"],
+    "source": "CDC Hantavirus surveillance 2024-2025; WHO HFRS technical brief; ECDC Puumala report 2024",
+    "text": "Hantaviruses are rodent-borne RNA viruses causing two clinical syndromes. Hantavirus pulmonary syndrome (HPS) is dominated in the Americas by Sin Nombre virus (SNV) in North America and Andes virus (ANDV) in South America. Hemorrhagic fever with renal syndrome (HFRS) is dominated in Asia by Hantaan virus and Seoul virus, and in Europe by Puumala and Dobrava viruses. The first identified strain Hantaan was characterised in Korea in 1978. Andes virus is the only hantavirus with documented sustained human-to-human transmission. Person-to-person R0 is generally below 1 (typically 0.3 to 0.8) outside Andes outbreak clusters. Median incubation period is approximately 14 to 28 days for HPS and 12 to 21 days for HFRS. Infectious period is short, approximately 5 to 7 days from symptom onset where person-to-person transmission has been documented. Untreated case fatality ratio for HPS is approximately 35 to 40 percent (Sin Nombre); Andes virus CFR ranges 25 to 40 percent. HFRS CFR ranges 1 to 15 percent depending on strain (Puumala mild, Dobrava severe). Recent surveillance highlights a 2025 Sin Nombre cluster around Mammoth Lakes, California, and continued Andes virus circulation in Patagonia."
+  },
+  {
     "disease": "Cholera",
     "aliases": ["cholera", "vibrio cholerae"],
     "source": "Mukandavire et al. 2011 PNAS; WHO Cholera fact sheet 2024",
