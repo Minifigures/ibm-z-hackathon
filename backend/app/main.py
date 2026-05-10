@@ -52,7 +52,7 @@ app.add_middleware(
 
 
 class SimulateRequest(BaseModel):
-    disease_id: Literal["covid19", "flu", "mpox", "sars", "ebola", "pathogenx", "dengue2050"] = "covid19"
+    disease_id: Literal["covid19", "flu", "mpox", "sars", "ebola", "pathogenx", "dengue2050", "cholera2050", "malaria2050", "lyme2050"] = "covid19"
     start_iso3: str = Field("USA", min_length=3, max_length=3)
     r0: float = Field(2.5, ge=0.1, le=8.0)
     incubation_days: float = Field(5.0, ge=0.5, le=30.0)
