@@ -1,3 +1,5 @@
+import json
+
 import pytest
 
 from app import watsonx
@@ -8,6 +10,10 @@ def _reset_token_cache():
     watsonx.reset_token_cache()
     yield
     watsonx.reset_token_cache()
+
+
+def _chat_response(text: str) -> dict:
+    return {"choices": [{"message": {"role": "assistant", "content": text}}]}
 
 
 def test_is_configured_requires_both_env_vars(monkeypatch):
@@ -29,7 +35,7 @@ def test_generate_raises_when_not_configured(monkeypatch):
         watsonx.generate("system", "user")
 
 
-def test_generate_happy_path_uses_iam_token_then_text_endpoint(monkeypatch):
+def test_generate_happy_path_posts_chat_messages_with_role_tags(monkeypatch):
     monkeypatch.setenv("WATSONX_APIKEY", "fake-key")
     monkeypatch.setenv("WATSONX_PROJECT_ID", "fake-project")
 
@@ -39,16 +45,25 @@ def test_generate_happy_path_uses_iam_token_then_text_endpoint(monkeypatch):
         calls.append((url, headers, body))
         if "iam.cloud.ibm.com" in url:
             return {"access_token": "TOK", "expires_in": 3600}
-        if "/ml/v1/text/generation" in url:
-            return {"results": [{"generated_text": "  Madrid is exposed via gravity.  "}]}
+        if "/ml/v1/text/chat" in url:
+            return _chat_response("  Madrid is exposed via gravity.  ")
         raise AssertionError(f"unexpected URL: {url}")
 
     monkeypatch.setattr(watsonx, "_http_post_json", fake_post)
-    out = watsonx.generate("system", "user", max_tokens=120)
+    out = watsonx.generate("you are a helpful analyst", "explain the spread", max_tokens=120)
+
     assert out == "Madrid is exposed via gravity."
     assert calls[0][0] == watsonx.IAM_TOKEN_URL
-    assert calls[1][1]["Authorization"] == "Bearer TOK"
-    assert b'"project_id": "fake-project"' in calls[1][2]
+    chat_url, headers, body = calls[1]
+    assert "/ml/v1/text/chat" in chat_url
+    # Bumped API version landed.
+    assert "version=2024-05-31" in chat_url
+    assert headers["Authorization"] == "Bearer TOK"
+    payload = json.loads(body.decode("utf-8"))
+    assert payload["project_id"] == "fake-project"
+    assert payload["max_tokens"] == 120
+    assert payload["messages"][0] == {"role": "system", "content": "you are a helpful analyst"}
+    assert payload["messages"][1] == {"role": "user", "content": "explain the spread"}
 
 
 def test_generate_propagates_request_error(monkeypatch):
@@ -65,14 +80,28 @@ def test_generate_propagates_request_error(monkeypatch):
         watsonx.generate("system", "user")
 
 
-def test_generate_raises_on_empty_results(monkeypatch):
+def test_generate_raises_on_empty_choices(monkeypatch):
     monkeypatch.setenv("WATSONX_APIKEY", "fake-key")
     monkeypatch.setenv("WATSONX_PROJECT_ID", "fake-project")
 
     def fake_post(url, body, headers, timeout=20.0):
         if "iam.cloud.ibm.com" in url:
             return {"access_token": "TOK", "expires_in": 3600}
-        return {"results": []}
+        return {"choices": []}
+
+    monkeypatch.setattr(watsonx, "_http_post_json", fake_post)
+    with pytest.raises(watsonx.WatsonxRequestError):
+        watsonx.generate("system", "user")
+
+
+def test_generate_raises_on_missing_assistant_content(monkeypatch):
+    monkeypatch.setenv("WATSONX_APIKEY", "fake-key")
+    monkeypatch.setenv("WATSONX_PROJECT_ID", "fake-project")
+
+    def fake_post(url, body, headers, timeout=20.0):
+        if "iam.cloud.ibm.com" in url:
+            return {"access_token": "TOK", "expires_in": 3600}
+        return {"choices": [{"message": {"role": "assistant"}}]}
 
     monkeypatch.setattr(watsonx, "_http_post_json", fake_post)
     with pytest.raises(watsonx.WatsonxRequestError):
@@ -89,7 +118,7 @@ def test_iam_token_is_cached_within_expiry(monkeypatch):
         if "iam.cloud.ibm.com" in url:
             calls["iam"] += 1
             return {"access_token": "TOK", "expires_in": 3600}
-        return {"results": [{"generated_text": "ok"}]}
+        return _chat_response("ok")
 
     monkeypatch.setattr(watsonx, "_http_post_json", fake_post)
     watsonx.generate("s", "u")

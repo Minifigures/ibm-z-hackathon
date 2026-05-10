@@ -11,7 +11,7 @@ Environment variables
 - WATSONX_PROJECT_ID    watsonx.ai project id (Manage > General > Project ID)
 - WATSONX_URL           Defaults to https://us-south.ml.cloud.ibm.com
 - WATSONX_MODEL_ID      Defaults to ibm/granite-3-3-8b-instruct
-- WATSONX_API_VERSION   Defaults to 2023-05-29
+- WATSONX_API_VERSION   Defaults to 2024-05-31
 """
 
 from __future__ import annotations
@@ -26,7 +26,7 @@ from dataclasses import dataclass
 
 DEFAULT_URL = "https://us-south.ml.cloud.ibm.com"
 DEFAULT_MODEL = "ibm/granite-3-3-8b-instruct"
-DEFAULT_API_VERSION = "2023-05-29"
+DEFAULT_API_VERSION = "2024-05-31"
 IAM_TOKEN_URL = "https://iam.cloud.ibm.com/identity/token"
 TOKEN_REFRESH_BUFFER_SECONDS = 300
 
@@ -102,11 +102,14 @@ def reset_token_cache() -> None:
 
 
 def generate(system_prompt: str, user_prompt: str, max_tokens: int = 400) -> str:
-    """Run a single watsonx.ai text-generation call and return the completion.
+    """Run a single watsonx.ai chat-completions call and return the assistant text.
 
-    Raises WatsonxNotConfigured when env vars are missing so the explain chain
-    can fall through cleanly. Raises WatsonxRequestError for transport / API
-    failures so the caller can decide whether to log + fall through.
+    Posts to /ml/v1/text/chat so the server applies Granite's chat template
+    natively and we send role-tagged messages instead of a concatenated raw
+    prompt. Raises WatsonxNotConfigured when env vars are missing so the
+    explain chain can fall through cleanly. Raises WatsonxRequestError for
+    transport / API / response-shape failures so the caller can decide
+    whether to log + fall through.
     """
     if not is_configured():
         raise WatsonxNotConfigured("WATSONX_APIKEY or WATSONX_PROJECT_ID missing")
@@ -117,23 +120,20 @@ def generate(system_prompt: str, user_prompt: str, max_tokens: int = 400) -> str
     api_version = os.environ.get("WATSONX_API_VERSION", DEFAULT_API_VERSION)
 
     token = _get_iam_token()
-    full_prompt = f"{system_prompt.strip()}\n\n{user_prompt.strip()}"
     body = json.dumps(
         {
-            "input": full_prompt,
             "model_id": model_id,
             "project_id": project_id,
-            "parameters": {
-                "decoding_method": "greedy",
-                "max_new_tokens": max_tokens,
-                "min_new_tokens": 30,
-                "repetition_penalty": 1.05,
-                "stop_sequences": ["\n\nUser:", "\n\nSystem:"],
-            },
+            "messages": [
+                {"role": "system", "content": system_prompt.strip()},
+                {"role": "user", "content": user_prompt.strip()},
+            ],
+            "max_tokens": max_tokens,
+            "temperature": 0,
         }
     ).encode("utf-8")
     payload = _http_post_json(
-        f"{base_url}/ml/v1/text/generation?version={api_version}",
+        f"{base_url}/ml/v1/text/chat?version={api_version}",
         body=body,
         headers={
             "Authorization": f"Bearer {token}",
@@ -141,8 +141,11 @@ def generate(system_prompt: str, user_prompt: str, max_tokens: int = 400) -> str
             "Accept": "application/json",
         },
     )
-    results = payload.get("results") or []
-    if not results:
-        raise WatsonxRequestError(f"watsonx response missing results: {payload}")
-    text = results[0].get("generated_text") or ""
+    choices = payload.get("choices") or []
+    if not choices:
+        raise WatsonxRequestError(f"watsonx response missing choices: {payload}")
+    message = choices[0].get("message") or {}
+    text = message.get("content") or ""
+    if not text:
+        raise WatsonxRequestError(f"watsonx response missing assistant content: {payload}")
     return text.strip()
