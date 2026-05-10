@@ -25,14 +25,14 @@ from .disease_lookup import lookup as disease_lookup
 from .explain import explain
 from .mobility import load_countries
 from .nowcast import NowcastObservation, NowcastParams, run_nowcast
-from .rate_limit import RateLimit
+from .rate_limit import rate_limit
 from .simulate import SimParams, run
 
 # Per-IP sliding-window rate limit applied to the watsonx/CPU-heavy endpoints.
 # The numbers are demo-friendly: a real interactive user will not exceed 10
 # nowcasts per minute, but a tight loop hitting the backend will get 429'd.
-nowcast_limiter = RateLimit(max_calls=10, window_seconds=60)
-disease_lookup_limiter = RateLimit(max_calls=20, window_seconds=60)
+nowcast_limiter = rate_limit(max_calls=10, window_seconds=60)
+disease_lookup_limiter = rate_limit(max_calls=20, window_seconds=60)
 
 DATA_DIR = Path(__file__).parent / "data"
 

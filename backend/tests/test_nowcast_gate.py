@@ -1,14 +1,13 @@
 """Tests for the /nowcast input caps and per-IP rate limit."""
 
-from __future__ import annotations
-
 import time
 
 import pytest
+from fastapi import FastAPI, Depends, HTTPException
 from fastapi.testclient import TestClient
 
 from app.main import app, nowcast_limiter
-from app.rate_limit import RateLimit
+from app.rate_limit import rate_limit
 
 
 def _payload(n_obs: int = 3) -> dict:
@@ -37,20 +36,17 @@ def _payload(n_obs: int = 3) -> dict:
 @pytest.fixture(autouse=True)
 def _reset_limiter():
     """Each test gets a clean rate-limit bucket."""
-    nowcast_limiter._hits.clear()
+    nowcast_limiter.hits.clear()
     yield
-    nowcast_limiter._hits.clear()
+    nowcast_limiter.hits.clear()
 
 
 def test_nowcast_rejects_oversized_observation_list():
     """Observations cap is enforced by the pydantic schema (max_length=365)."""
     client = TestClient(app)
     r = client.post("/nowcast", json=_payload(n_obs=400))
-    assert r.status_code == 422  # pydantic validation
-    body = r.json()
-    # The error shape varies by pydantic version; just confirm "observations"
-    # is mentioned somewhere in the validation detail.
-    assert "observations" in str(body).lower()
+    assert r.status_code == 422
+    assert "observations" in str(r.json()).lower()
 
 
 def test_nowcast_rejects_empty_observation_list():
@@ -59,9 +55,28 @@ def test_nowcast_rejects_empty_observation_list():
     assert r.status_code == 422
 
 
+def test_disease_params_dependency_injects_request_correctly():
+    """Regression for the previous class-based RateLimit which made FastAPI
+    interpret `request` as a query parameter and 422 every call."""
+    client = TestClient(app)
+    r = client.post("/disease-params", json={"name": "ebola"})
+    # The endpoint should NOT 422 with `loc: ["query", "request"]`. It may
+    # legitimately 503 (watsonx unconfigured in test env), 422 from pydantic
+    # output validation, 200 with params, or 429. All are fine; the failure
+    # mode we are guarding against is the dependency-injection bug.
+    if r.status_code == 422:
+        body = r.json()
+        detail = body.get("detail")
+        if isinstance(detail, list):
+            for item in detail:
+                assert item.get("loc") != ["query", "request"], (
+                    "rate-limit dependency is leaking 'request' as a query parameter"
+                )
+
+
 def test_rate_limit_returns_429_after_burst():
-    """Direct test of the RateLimit dependency, isolated from FastAPI."""
-    rl = RateLimit(max_calls=3, window_seconds=60)
+    """The function-factory dependency, called directly, should 429 on overflow."""
+    rl = rate_limit(max_calls=3, window_seconds=60)
 
     class _FakeClient:
         host = "1.2.3.4"
@@ -70,12 +85,8 @@ def test_rate_limit_returns_429_after_burst():
         client = _FakeClient()
         headers: dict[str, str] = {}
 
-    # First three calls succeed.
     for _ in range(3):
         rl(_Req())
-    # Fourth raises 429.
-    from fastapi import HTTPException
-
     with pytest.raises(HTTPException) as exc:
         rl(_Req())
     assert exc.value.status_code == 429
@@ -84,7 +95,7 @@ def test_rate_limit_returns_429_after_burst():
 
 def test_rate_limit_window_drains():
     """After window_seconds the bucket frees up."""
-    rl = RateLimit(max_calls=2, window_seconds=0.1)
+    rl = rate_limit(max_calls=2, window_seconds=0.1)
 
     class _Req:
         class client:
@@ -99,7 +110,7 @@ def test_rate_limit_window_drains():
 
 def test_rate_limit_honours_x_forwarded_for():
     """First IP in X-Forwarded-For is treated as the client."""
-    rl = RateLimit(max_calls=1, window_seconds=60)
+    rl = rate_limit(max_calls=1, window_seconds=60)
 
     class _Req:
         class client:
@@ -107,8 +118,23 @@ def test_rate_limit_honours_x_forwarded_for():
         headers = {"x-forwarded-for": "203.0.113.5, 10.0.0.1"}
 
     rl(_Req())
-    # Same forwarded IP gets blocked even though uvicorn sees the proxy IP.
-    from fastapi import HTTPException
-
     with pytest.raises(HTTPException):
         rl(_Req())
+
+
+def test_rate_limit_via_fastapi_actually_429s():
+    """End-to-end: a route protected by the rate-limit dependency should
+    actually return 429 in a TestClient request when burst-flooded."""
+    test_app = FastAPI()
+    limiter = rate_limit(max_calls=2, window_seconds=60)
+
+    @test_app.get("/ping", dependencies=[Depends(limiter)])
+    def ping() -> dict:
+        return {"ok": True}
+
+    client = TestClient(test_app)
+    assert client.get("/ping").status_code == 200
+    assert client.get("/ping").status_code == 200
+    r = client.get("/ping")
+    assert r.status_code == 429
+    assert "Retry-After" in r.headers
