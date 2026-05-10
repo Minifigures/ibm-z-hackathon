@@ -53,7 +53,10 @@ jobs:
           fi
 
           echo "==> rebuild frontend"
-          (cd frontend && npm run build)
+          # NEXT_PUBLIC_* must be set at build time -- Next bakes them into
+          # the client bundle. nginx on this VSI proxies /api/* to FastAPI,
+          # so the frontend should call the same origin under /api.
+          (cd frontend && NEXT_PUBLIC_API_BASE=/api npm run build)
 
           echo "==> restart services"
           sudo /bin/systemctl reset-failed disease-outflow-backend.service disease-outflow-frontend.service 2>/dev/null || true
