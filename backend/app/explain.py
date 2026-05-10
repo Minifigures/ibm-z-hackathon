@@ -5,17 +5,22 @@ Provider chain (highest priority first):
 2. Anthropic Claude            (gated on ANTHROPIC_API_KEY)
 3. Deterministic templated paragraph (always available)
 
-Each provider may fail gracefully; on failure the chain falls through to the
-next entry so the demo never breaks. The response always includes a `source`
-field so the UI can render a provenance pill.
+Each provider raises on failure; explain() catches the error, logs a warning,
+records it in error_chain, and continues to the next provider. The templated
+paragraph is computed exactly once at the bottom when no live provider
+succeeded, so the demo never breaks but a stage-side credential outage is
+visible to anyone who inspects the response payload.
 """
 
 from __future__ import annotations
 
+import logging
 import os
 from typing import Any
 
 from . import watsonx
+
+log = logging.getLogger(__name__)
 
 EXPLAINER_MODEL = "claude-haiku-4-5-20251001"
 SYSTEM_PROMPT = (
@@ -103,54 +108,75 @@ def _user_prompt(simulation: dict[str, Any], focus_iso3: str | None) -> str:
     )
 
 
-def _try_watsonx(simulation: dict[str, Any], focus_iso3: str | None) -> dict[str, str] | None:
+class _ProviderUnavailable(RuntimeError):
+    """Raised by a provider that is not configured (env vars missing).
+
+    Distinct from a transient call failure so explain() can decide whether
+    to surface the skip in the error_chain (we hide unconfigured providers
+    to keep the chain visible only to credential / network problems)."""
+
+
+def _call_watsonx(simulation: dict[str, Any], focus_iso3: str | None) -> str:
     if not watsonx.is_configured():
-        return None
+        raise _ProviderUnavailable("watsonx env vars missing")
     try:
-        text = watsonx.generate(SYSTEM_PROMPT, _user_prompt(simulation, focus_iso3))
-    except watsonx.WatsonxNotConfigured:
-        return None
-    except watsonx.WatsonxRequestError as exc:
-        return {
-            "text": _template_fallback(simulation, focus_iso3),
-            "source": "template",
-            "error": f"watsonx: {exc}",
-        }
-    return {"text": text, "source": "watsonx"}
+        return watsonx.generate(SYSTEM_PROMPT, _user_prompt(simulation, focus_iso3))
+    except watsonx.WatsonxNotConfigured as exc:
+        raise _ProviderUnavailable(str(exc)) from exc
 
 
-def _try_anthropic(simulation: dict[str, Any], focus_iso3: str | None) -> dict[str, str] | None:
+def _call_anthropic(simulation: dict[str, Any], focus_iso3: str | None) -> str:
     api_key = os.environ.get("ANTHROPIC_API_KEY", "").strip()
     if not api_key:
-        return None
+        raise _ProviderUnavailable("ANTHROPIC_API_KEY missing")
     try:
         import anthropic
-    except ImportError:
-        return None
+    except ImportError as exc:
+        raise _ProviderUnavailable("anthropic SDK not installed") from exc
 
-    try:
-        client = anthropic.Anthropic(api_key=api_key)
-        msg = client.messages.create(
-            model=EXPLAINER_MODEL,
-            max_tokens=400,
-            system=SYSTEM_PROMPT,
-            messages=[{"role": "user", "content": _user_prompt(simulation, focus_iso3)}],
-        )
-        text = "".join(part.text for part in msg.content if getattr(part, "type", None) == "text")
-        return {"text": text.strip(), "source": "anthropic"}
-    except Exception as exc:  # noqa: BLE001 - graceful degradation for the demo
-        return {
-            "text": _template_fallback(simulation, focus_iso3),
-            "source": "template",
-            "error": str(exc),
-        }
+    client = anthropic.Anthropic(api_key=api_key)
+    msg = client.messages.create(
+        model=EXPLAINER_MODEL,
+        max_tokens=400,
+        system=SYSTEM_PROMPT,
+        messages=[{"role": "user", "content": _user_prompt(simulation, focus_iso3)}],
+    )
+    text = "".join(part.text for part in msg.content if getattr(part, "type", None) == "text")
+    return text.strip()
 
 
-def explain(simulation: dict[str, Any], focus_iso3: str | None = None) -> dict[str, str]:
-    for provider in (_try_watsonx, _try_anthropic):
-        result = provider(simulation, focus_iso3)
-        # Ignore template-with-error fallbacks here so the chain can keep going
-        # and let a working downstream provider win.
-        if result and result.get("source") != "template":
-            return result
-    return {"text": _template_fallback(simulation, focus_iso3), "source": "template"}
+_PROVIDERS = (
+    ("watsonx", _call_watsonx),
+    ("anthropic", _call_anthropic),
+)
+
+
+def explain(simulation: dict[str, Any], focus_iso3: str | None = None) -> dict[str, Any]:
+    """Walk the provider chain. Return the first successful provider's output;
+    on full fall-through return the templated paragraph plus an error_chain
+    enumerating each provider's failure (configured-but-failed only). The
+    error_chain key is omitted entirely on the happy path."""
+    error_chain: list[dict[str, str]] = []
+    for name, call in _PROVIDERS:
+        try:
+            text = call(simulation, focus_iso3)
+        except _ProviderUnavailable:
+            # Provider is intentionally skipped because credentials are absent;
+            # do not surface this as an error to the user.
+            continue
+        except Exception as exc:  # noqa: BLE001 - we want all transport failures to fall through
+            log.warning("%s explain provider failed: %s", name, exc)
+            error_chain.append({"provider": name, "error": str(exc)})
+            continue
+        result: dict[str, Any] = {"text": text, "source": name}
+        if error_chain:
+            result["error_chain"] = error_chain
+        return result
+
+    fallback: dict[str, Any] = {
+        "text": _template_fallback(simulation, focus_iso3),
+        "source": "template",
+    }
+    if error_chain:
+        fallback["error_chain"] = error_chain
+    return fallback

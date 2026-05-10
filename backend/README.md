@@ -41,7 +41,9 @@ export WATSONX_MODEL_ID=ibm/granite-3-3-8b-instruct    # optional, default shown
 export ANTHROPIC_API_KEY=sk-ant-...
 ```
 
-The response always includes a `source` field (`watsonx` / `anthropic` / `template`) so the frontend can render a provenance pill.
+The response always includes a `source` field (`watsonx` / `anthropic` / `template`). When a configured provider fails (transport, auth, bad response), the failure is logged and surfaced via an optional `error_chain` field on the response so a credential outage on stage is visible instead of silently masked. Unconfigured providers are skipped quietly.
+
+The watsonx call uses the chat-completions endpoint (`/ml/v1/text/chat`, API version `2024-05-31`) so Granite's chat template is applied server-side and we send role-tagged messages instead of a concatenated raw prompt.
 
 ## File map
 
