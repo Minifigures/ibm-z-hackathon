@@ -24,11 +24,12 @@ API: <http://localhost:8000/docs>
 
 ## Provider chain for `/explain` (all optional)
 
-The endpoint walks a three-step provider chain. Each step is gated on env vars and the chain falls through cleanly when none are set, so the demo never breaks.
+The endpoint walks a four-step provider chain. Each step is gated on env vars and the chain falls through cleanly when none are set, so the demo never breaks.
 
 1. **IBM watsonx.ai Granite**, used when `WATSONX_APIKEY` and `WATSONX_PROJECT_ID` are both set.
-2. **Anthropic Claude Haiku**, used when `ANTHROPIC_API_KEY` is set and the SDK is installed.
-3. **Templated fallback**: deterministic paragraph grounded in the simulator output, always available.
+2. **Invoke endpoint** (OpenAI-compatible), used when `INVOKE_BASE_URL` is set.
+3. **Anthropic Claude Haiku**, used when `ANTHROPIC_API_KEY` is set and the SDK is installed.
+4. **Templated fallback**: deterministic paragraph grounded in the simulator output, always available.
 
 ```bash
 # IBM watsonx.ai (preferred for the IBM Z hackathon track)
@@ -37,11 +38,16 @@ export WATSONX_PROJECT_ID=...           # watsonx.ai project id
 export WATSONX_URL=https://us-south.ml.cloud.ibm.com   # optional, default shown
 export WATSONX_MODEL_ID=ibm/granite-3-3-8b-instruct    # optional, default shown
 
+# Invoke endpoint (optional fallback above Anthropic)
+export INVOKE_BASE_URL=https://invoke.cloud.marsi.eu
+export INVOKE_API_KEY=...               # optional, only if endpoint is protected
+export INVOKE_MODEL=openai/gpt-4o-mini  # optional
+
 # Anthropic fallback
 export ANTHROPIC_API_KEY=sk-ant-...
 ```
 
-The response always includes a `source` field (`watsonx` / `anthropic` / `template`). When a configured provider fails (transport, auth, bad response), the failure is logged and surfaced via an optional `error_chain` field on the response so a credential outage on stage is visible instead of silently masked. Unconfigured providers are skipped quietly.
+The response always includes a `source` field (`watsonx` / `invoke` / `anthropic` / `template`). When a configured provider fails (transport, auth, bad response), the failure is logged and surfaced via an optional `error_chain` field on the response so a credential outage on stage is visible instead of silently masked. Unconfigured providers are skipped quietly.
 
 The watsonx call uses the chat-completions endpoint (`/ml/v1/text/chat`, API version `2024-05-31`) so Granite's chat template is applied server-side and we send role-tagged messages instead of a concatenated raw prompt.
 

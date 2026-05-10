@@ -22,7 +22,14 @@ def _sim():
 
 
 def _clear_provider_env(monkeypatch):
-    for key in ("ANTHROPIC_API_KEY", "WATSONX_APIKEY", "WATSONX_PROJECT_ID"):
+    for key in (
+        "ANTHROPIC_API_KEY",
+        "WATSONX_APIKEY",
+        "WATSONX_PROJECT_ID",
+        "INVOKE_BASE_URL",
+        "INVOKE_API_KEY",
+        "INVOKE_MODEL",
+    ):
         monkeypatch.delenv(key, raising=False)
 
 
@@ -78,6 +85,24 @@ def test_watsonx_provider_wins_when_configured(monkeypatch):
     out = explain(sim, focus_iso3=None)
     assert out["source"] == "watsonx"
     assert "Granite says" in out["text"]
+
+
+def test_invoke_provider_used_when_watsonx_not_configured(monkeypatch):
+    _clear_provider_env(monkeypatch)
+    monkeypatch.setenv("INVOKE_BASE_URL", "https://invoke.cloud.marsi.eu")
+
+    from app import invoke as invoke_module
+
+    monkeypatch.setattr(
+        invoke_module,
+        "generate",
+        lambda system, user, max_tokens=400: "Invoke says: main import corridor remains regional.",
+    )
+
+    sim = _sim()
+    out = explain(sim, focus_iso3=None)
+    assert out["source"] == "invoke"
+    assert "Invoke says" in out["text"]
 
 
 def test_watsonx_request_error_records_error_chain_and_falls_through(monkeypatch):
@@ -141,6 +166,46 @@ def test_watsonx_failure_then_anthropic_success_records_only_watsonx(monkeypatch
     assert out["source"] == "anthropic"
     assert "Claude says" in out["text"]
     assert out["error_chain"][0]["provider"] == "watsonx"
+
+
+def test_invoke_failure_then_anthropic_success_records_invoke(monkeypatch):
+    _clear_provider_env(monkeypatch)
+    monkeypatch.setenv("INVOKE_BASE_URL", "https://invoke.cloud.marsi.eu")
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-ant-fake")
+
+    from app import invoke as invoke_module
+
+    def invoke_boom(*args, **kwargs):
+        raise invoke_module.InvokeRequestError("HTTP 502: gateway timeout")
+
+    monkeypatch.setattr(invoke_module, "generate", invoke_boom)
+
+    class _StubMsg:
+        type = "text"
+        text = "Claude says: spread remains concentrated in the top hubs."
+
+    class _StubResponse:
+        content = [_StubMsg()]
+
+    class _StubClient:
+        def __init__(self, **_kw):
+            self.messages = self
+
+        def create(self, **_kw):
+            return _StubResponse()
+
+    import sys
+    import types
+
+    fake_anthropic = types.ModuleType("anthropic")
+    fake_anthropic.Anthropic = _StubClient  # type: ignore[attr-defined]
+    monkeypatch.setitem(sys.modules, "anthropic", fake_anthropic)
+
+    sim = _sim()
+    out = explain(sim, focus_iso3=None)
+    assert out["source"] == "anthropic"
+    assert "Claude says" in out["text"]
+    assert out["error_chain"][0]["provider"] == "invoke"
 
 
 def test_watsonx_not_configured_does_not_appear_in_error_chain(monkeypatch):

@@ -38,6 +38,7 @@ If we still have time after that:
 | --- | --- | --- |
 | `WATSONX_APIKEY` | https://cloud.ibm.com/iam/apikeys | Enables the Granite path in `/explain`. Without it, the chain falls through to Claude or template. |
 | `WATSONX_PROJECT_ID` | watsonx.ai studio, Manage > General > Project ID | Required alongside the API key. |
+| `INVOKE_BASE_URL` | https://invoke.cloud.marsi.eu | Optional shared LLM endpoint; keeps `/explain` live if local model creds are unavailable. |
 | LinuxONE Community Cloud account | https://linuxone.cloud.marist.edu (free, 120-day VM) | For the IBM Z track angle: deploy the FastAPI backend on s390x and demo it. |
 | `ANTHROPIC_API_KEY` (optional) | https://console.anthropic.com | Backup explainer if watsonx is down during the demo. |
 
