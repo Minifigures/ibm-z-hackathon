@@ -27,6 +27,79 @@ type Props = {
 
 const VARIANT_COLORS = ["#fbbf24", "#7cf2c8", "#a78bfa", "#f472b6"];
 
+type Row = {
+  day: number;
+  band95_lo: number;
+  band95_hi: number;
+  band80_lo: number;
+  band80_hi: number;
+  median: number;
+  posterior_median: number | null;
+  band95_floor: number;
+  band95_height: number;
+  band80_floor: number;
+  band80_height: number;
+};
+
+function fmt(n: number): string {
+  if (!Number.isFinite(n)) return "—";
+  if (Math.abs(n) >= 1) return Math.round(n).toLocaleString();
+  if (n === 0) return "0";
+  return n.toFixed(2);
+}
+
+function ForecastTooltip({
+  active,
+  payload,
+  label,
+}: {
+  active?: boolean;
+  payload?: Array<{ payload: Row }>;
+  label?: number | string;
+}) {
+  if (!active || !payload || !payload.length) return null;
+  const row = payload[0]?.payload;
+  if (!row) return null;
+  return (
+    <div
+      style={{
+        background: "#0f141c",
+        border: "1px solid #1f2632",
+        borderRadius: 6,
+        padding: "6px 10px",
+        fontSize: 11,
+        fontFamily: "ui-sans-serif, system-ui",
+        color: "#e6edf3",
+        minWidth: 140,
+      }}
+    >
+      <div style={{ fontWeight: 600, marginBottom: 4 }}>Day {label}</div>
+      <div style={{ display: "grid", gridTemplateColumns: "auto auto", gap: "2px 8px" }}>
+        <span style={{ color: "#64748b" }}>median</span>
+        <span style={{ fontFamily: "ui-monospace, monospace", color: "#7cf2c8" }}>
+          {fmt(row.median)}
+        </span>
+        <span style={{ color: "#64748b" }}>50% interval</span>
+        <span style={{ fontFamily: "ui-monospace, monospace" }}>
+          [{fmt(row.band80_lo)}, {fmt(row.band80_hi)}]
+        </span>
+        <span style={{ color: "#64748b" }}>95% interval</span>
+        <span style={{ fontFamily: "ui-monospace, monospace" }}>
+          [{fmt(row.band95_lo)}, {fmt(row.band95_hi)}]
+        </span>
+        {row.posterior_median != null ? (
+          <>
+            <span style={{ color: "#64748b" }}>posterior</span>
+            <span style={{ fontFamily: "ui-monospace, monospace", color: "#fb923c" }}>
+              {fmt(row.posterior_median)}
+            </span>
+          </>
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
 export function ForecastChart({
   title,
   quantiles,
@@ -80,19 +153,7 @@ export function ForecastChart({
             <CartesianGrid strokeDasharray="2 4" stroke="#1f2632" vertical={false} />
             <XAxis dataKey="day" stroke="#475569" tick={{ fontSize: 10 }} />
             <YAxis stroke="#475569" tick={{ fontSize: 10 }} width={40} />
-            <Tooltip
-              contentStyle={{
-                background: "#0f141c",
-                border: "1px solid #1f2632",
-                borderRadius: 6,
-                fontSize: 11,
-              }}
-              labelFormatter={(d) => `Day ${d}`}
-              formatter={(v: number, k: string) => {
-                if (k === "median") return [Math.round(v).toLocaleString(), "median"];
-                return null;
-              }}
-            />
+            <Tooltip content={<ForecastTooltip />} cursor={{ stroke: "#1f2632", strokeWidth: 1 }} />
             <Area type="monotone" dataKey="band95_floor" stackId="95" stroke="none" fill="transparent" />
             <Area
               type="monotone"
