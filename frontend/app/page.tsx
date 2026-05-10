@@ -107,6 +107,17 @@ export default function Page() {
     return result.regions.find((r) => r.iso3 === selectedIso3) ?? null;
   }, [result, selectedIso3]);
 
+  const allHubs = useMemo(() => {
+    if (!result) return [];
+    return result.regions
+      .map((r) => ({
+        iso3: r.iso3,
+        name: r.name,
+        expected_cases: r.cumulative_p50_final,
+      }))
+      .sort((a, b) => (b.expected_cases ?? 0) - (a.expected_cases ?? 0));
+  }, [result]);
+
   const focusName = focusRegion?.name ?? null;
   const calibration = result?.calibration;
 
@@ -283,10 +294,12 @@ export default function Page() {
         <div className="absolute bottom-0 left-0 right-0 grid grid-cols-3 gap-3 p-3 pointer-events-none">
           <div className="pointer-events-auto">
             <HubList
-              title="Top import hubs (median expected cases)"
-              rows={result?.top_imports ?? []}
+              title="All countries (median cumulative cases)"
+              rows={allHubs}
               valueKey="expected_cases"
               onSelect={setSelectedIso3}
+              selectedIso3={selectedIso3}
+              maxHeight="260px"
             />
           </div>
           <div className="pointer-events-auto">
