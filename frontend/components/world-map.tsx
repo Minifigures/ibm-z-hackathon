@@ -127,8 +127,11 @@ export function WorldMap({ countries, regions, arcs, selectedIso3, startIso3, on
         attributionControl: { compact: true },
       });
       map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-right");
-      // Suppress tile fetch errors from bubbling to Next.js dev overlay
-      map.on("error", () => {});
+      // Suppress tile fetch errors from bubbling to Next.js dev overlay,
+      // but keep a dev-mode breadcrumb so a broken basemap is debuggable.
+      map.on("error", (e) => {
+        if (process.env.NODE_ENV !== "production") console.warn("[maplibre]", e);
+      });
       // Force MapLibre to recalculate its canvas size after the style loads
       map.once("load", () => map.resize());
       mapRef.current = map;
