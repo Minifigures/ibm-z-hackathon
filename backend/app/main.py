@@ -14,10 +14,14 @@ import json
 from pathlib import Path
 from typing import Any, Literal
 
+from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
+load_dotenv()
+
+from .disease_lookup import lookup as disease_lookup
 from .explain import explain
 from .mobility import load_countries
 from .nowcast import NowcastObservation, NowcastParams, run_nowcast
@@ -69,6 +73,10 @@ class NowcastRequest(SimulateRequest):
     n_particles: int = Field(400, ge=50, le=2000)
     rho_min: float = Field(0.02, gt=0.0, lt=1.0)
     rho_max: float = Field(0.5, gt=0.0, le=1.0)
+
+
+class DiseaseLookupRequest(BaseModel):
+    name: str = Field(..., min_length=1, max_length=120)
 
 
 @app.get("/health")
@@ -158,3 +166,14 @@ def nowcast_endpoint(req: NowcastRequest) -> dict[str, Any]:
         )
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@app.post("/disease-params")
+def disease_params_endpoint(req: DiseaseLookupRequest) -> dict[str, Any]:
+    result = disease_lookup(req.name)
+    status = result.get("status")
+    if status == "unconfigured":
+        raise HTTPException(status_code=503, detail=result)
+    if status == "rejected":
+        raise HTTPException(status_code=422, detail=result)
+    return result

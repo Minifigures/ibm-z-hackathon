@@ -135,6 +135,60 @@ export type NowcastRequest = SimulateRequest & {
   rho_max?: number;
 };
 
+export type DiseaseParams = {
+  label: string;
+  r0: number;
+  incubation_days: number;
+  infectious_days: number;
+  cfr_pct: number;
+  sources: string[];
+  confidence: "high" | "medium" | "low";
+  notes: string;
+  likely_origin_iso3: string | null;
+  likely_origin_reason: string;
+};
+
+export type RetrievedPassage = {
+  source: string | null;
+  score: number | null;
+  snippet: string;
+  disease: string | null;
+};
+
+export type DiseaseLookupOk = {
+  status: "ok";
+  params: DiseaseParams;
+  retrieved: RetrievedPassage[];
+  cached: boolean;
+};
+
+export type DiseaseLookupError = {
+  status: "rejected" | "unconfigured";
+  message: string;
+};
+
+export type DiseaseLookupResult = DiseaseLookupOk | DiseaseLookupError;
+
+async function diseaseLookup(name: string): Promise<DiseaseLookupResult> {
+  const res = await fetch(`${API_BASE}/disease-params`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ name }),
+  });
+  if (res.ok) return (await res.json()) as DiseaseLookupOk;
+  try {
+    const body = await res.json();
+    const detail = (body && body.detail) ?? body;
+    if (detail && typeof detail === "object" && "status" in detail) {
+      return detail as DiseaseLookupError;
+    }
+    return { status: "rejected", message: typeof detail === "string" ? detail : `HTTP ${res.status}` };
+  } catch {
+    return { status: "rejected", message: `HTTP ${res.status}` };
+  }
+}
+
+
 export const api = {
   countries: () => jsonFetch<Country[]>("/countries"),
   presets: () => jsonFetch<Record<string, DiseasePreset>>("/presets"),
@@ -147,4 +201,5 @@ export const api = {
     }),
   nowcast: (req: NowcastRequest) =>
     jsonFetch<NowcastResult>("/nowcast", { method: "POST", body: JSON.stringify(req) }),
+  diseaseLookup,
 };

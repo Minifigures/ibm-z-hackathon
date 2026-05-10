@@ -7,9 +7,11 @@ import { ExplainPanel } from "@/components/explain-panel";
 import { HubList } from "@/components/hub-list";
 import { NowcastPanel } from "@/components/nowcast-panel";
 import { SliderRow } from "@/components/slider-row";
+import { DiseaseSearch } from "@/components/disease-search";
 import {
   api,
   type Country,
+  type DiseaseParams,
   type DiseasePreset,
   type NowcastObservation,
   type NowcastResult,
@@ -96,6 +98,20 @@ export default function Page() {
       infectious_days: p.infectious_days,
       cfr_pct: p.cfr_pct,
     });
+  };
+
+  const onAutoFill = (p: DiseaseParams) => {
+    const patch: Partial<SimulateRequest> = {
+      disease_id: "pathogenx",
+      r0: p.r0,
+      incubation_days: p.incubation_days,
+      infectious_days: p.infectious_days,
+      cfr_pct: p.cfr_pct,
+    };
+    if (p.likely_origin_iso3 && countries.some((c) => c.iso3 === p.likely_origin_iso3)) {
+      patch.start_iso3 = p.likely_origin_iso3;
+    }
+    update(patch);
   };
 
   const onExplain = async () => {
@@ -202,6 +218,9 @@ export default function Page() {
       <aside className="row-start-2 overflow-y-auto border-r border-ink-600 bg-ink-800 p-4 space-y-4">
         <section>
           <h2 className="text-xs uppercase tracking-wider text-slate-400 mb-2">Scenario</h2>
+          <div className="mb-3">
+            <DiseaseSearch onApply={onAutoFill} />
+          </div>
           <div className="grid grid-cols-2 gap-2 mb-3">
             {Object.values(presets).map((p) => (
               <button
@@ -335,7 +354,7 @@ export default function Page() {
         </section>
       </aside>
 
-      <section className="row-start-2 grid grid-rows-[1fr_minmax(220px,32%)] overflow-hidden">
+      <section className="row-start-2 grid grid-rows-[1fr_auto] overflow-hidden">
         <div className="relative overflow-hidden">
           <div className="absolute inset-0">
             {mapView === "geo" ? (
@@ -380,7 +399,7 @@ export default function Page() {
           </div>
         </div>
 
-        <div className="grid grid-cols-3 gap-3 overflow-y-auto border-t border-ink-600 bg-ink-900 p-3">
+        <div className="grid grid-cols-3 gap-3 max-h-[42vh] overflow-y-auto border-t border-ink-600 bg-ink-900 p-3">
           <HubList
             title="Top import hubs (median expected cases)"
             rows={result?.top_imports ?? []}
