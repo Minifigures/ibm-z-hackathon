@@ -27,8 +27,18 @@ jobs:
         env:
           DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
           DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          WATSONX_APIKEY: ${{ secrets.WATSONX_APIKEY }}
+          WATSONX_PROJECT_ID: ${{ secrets.WATSONX_PROJECT_ID }}
+          WATSONX_URL: ${{ secrets.WATSONX_URL }}
         run: |
-          ssh -o BatchMode=yes "$DEPLOY_USER@$DEPLOY_HOST" 'bash -s' <<'REMOTE'
+          # The remote heredoc is single-quoted (literal), but we still need
+          # the watsonx secrets to be readable by the remote bash. We pass
+          # them via the SSH command string, which expands locally; on the
+          # remote side they are normal environment variables that our
+          # remote script reads when writing /opt/disease-outflow/backend/.env.
+          ssh -o BatchMode=yes \
+            "$DEPLOY_USER@$DEPLOY_HOST" \
+            "WATSONX_APIKEY='$WATSONX_APIKEY' WATSONX_PROJECT_ID='$WATSONX_PROJECT_ID' WATSONX_URL='$WATSONX_URL' bash -s" <<'REMOTE'
           set -euo pipefail
           APP_DIR=/opt/disease-outflow
           cd "$APP_DIR"
@@ -57,6 +67,21 @@ jobs:
           # the client bundle. nginx on this VSI proxies /api/* to FastAPI,
           # so the frontend should call the same origin under /api.
           (cd frontend && NEXT_PUBLIC_API_BASE=/api npm run build)
+
+          echo "==> write backend secrets to backend/.env"
+          # backend/app/main.py calls load_dotenv() at import time, so this
+          # file is read by the FastAPI process when systemd restarts it.
+          # Variables came in via the SSH command line (see workflow yaml);
+          # we use printf instead of a heredoc because the YAML run block
+          # forces leading whitespace and a quoted heredoc terminator must
+          # sit at column 0 to close.
+          umask 077
+          {
+            printf 'WATSONX_APIKEY=%s\n'     "${WATSONX_APIKEY:-}"
+            printf 'WATSONX_PROJECT_ID=%s\n' "${WATSONX_PROJECT_ID:-}"
+            printf 'WATSONX_URL=%s\n'        "${WATSONX_URL:-}"
+          } > backend/.env
+          chmod 600 backend/.env
 
           echo "==> restart services"
           sudo /bin/systemctl reset-failed disease-outflow-backend.service disease-outflow-frontend.service 2>/dev/null || true
