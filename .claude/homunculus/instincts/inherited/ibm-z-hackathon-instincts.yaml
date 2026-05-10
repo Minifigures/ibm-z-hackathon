@@ -1,0 +1,318 @@
+# Instincts generated from https://github.com/Minifigures/ibm-z-hackathon
+# Generated: 2026-05-10T08:50:04.957Z
+# Version: 2.0
+# NOTE: This file supplements (does not replace) any existing curated instincts.
+# High-confidence manually curated instincts should be preserved alongside these.
+
+---
+id: ibm-z-hackathon-commit-conventional
+trigger: "when writing a commit message"
+confidence: 0.85
+domain: git
+source: repo-analysis
+source_repo: https://github.com/Minifigures/ibm-z-hackathon
+---
+
+# Ibm Z Hackathon Commit Conventional
+
+## Action
+
+Use conventional commit format with prefixes: feat
+
+## Evidence
+
+- 1 commits analyzed
+- Detected conventional commit pattern
+- Examples: feat(ui): IBM Granite provenance pill + UN SDG impact badge
+
+---
+id: ibm-z-hackathon-commit-length
+trigger: "when writing a commit message"
+confidence: 0.6
+domain: git
+source: repo-analysis
+source_repo: https://github.com/Minifigures/ibm-z-hackathon
+---
+
+# Ibm Z Hackathon Commit Length
+
+## Action
+
+Write moderate-length commit messages (~59 characters)
+
+## Evidence
+
+- Average commit message length: 59 chars
+- Based on 1 commits
+
+---
+id: ibm-z-hackathon-naming-files
+trigger: "when creating a new file"
+confidence: 0.8
+domain: code-style
+source: repo-analysis
+source_repo: https://github.com/Minifigures/ibm-z-hackathon
+---
+
+# Ibm Z Hackathon Naming Files
+
+## Action
+
+Use kebab-case naming convention
+
+## Evidence
+
+- Analyzed file naming patterns in repository
+- Dominant pattern: kebab-case
+
+---
+id: ibm-z-hackathon-import-alias
+trigger: "when importing modules"
+confidence: 0.85
+domain: code-style
+source: repo-analysis
+source_repo: https://github.com/Minifigures/ibm-z-hackathon
+---
+
+# Ibm Z Hackathon Import Alias
+
+## Action
+
+Use path aliases (@/, ~/) instead of relative imports
+
+## Evidence
+
+- Import analysis shows alias pattern
+- Example: import { x } from '@/lib/x'
+
+---
+id: ibm-z-hackathon-export-style
+trigger: "when exporting from a module"
+confidence: 0.7
+domain: code-style
+source: repo-analysis
+source_repo: https://github.com/Minifigures/ibm-z-hackathon
+---
+
+# Ibm Z Hackathon Export Style
+
+## Action
+
+Prefer mixed exports
+
+## Evidence
+
+- Export pattern analysis
+- Dominant style: mixed
+
+---
+id: ibm-z-hackathon-instinct-file-naming
+trigger: "When creating a new file"
+confidence: 0.9
+domain: code-style
+source: repo-analysis
+source_repo: Minifigures/ibm-z-hackathon
+---
+
+# Ibm Z Hackathon Instinct File Naming
+
+## Action
+
+Name the file using kebab-case
+
+## Evidence
+
+- Pattern in namingConventions.files: kebab-case
+
+---
+id: ibm-z-hackathon-instinct-function-naming
+trigger: "When defining a new function"
+confidence: 0.9
+domain: code-style
+source: repo-analysis
+source_repo: Minifigures/ibm-z-hackathon
+---
+
+# Ibm Z Hackathon Instinct Function Naming
+
+## Action
+
+Use camelCase for the function name
+
+## Evidence
+
+- Pattern in namingConventions.functions: camelCase
+
+---
+id: ibm-z-hackathon-instinct-class-naming
+trigger: "When defining a new class"
+confidence: 0.9
+domain: code-style
+source: repo-analysis
+source_repo: Minifigures/ibm-z-hackathon
+---
+
+# Ibm Z Hackathon Instinct Class Naming
+
+## Action
+
+Use PascalCase for the class name
+
+## Evidence
+
+- Pattern in namingConventions.classes: PascalCase
+
+---
+id: ibm-z-hackathon-instinct-constant-naming
+trigger: "When defining a constant"
+confidence: 0.9
+domain: code-style
+source: repo-analysis
+source_repo: Minifigures/ibm-z-hackathon
+---
+
+# Ibm Z Hackathon Instinct Constant Naming
+
+## Action
+
+Use SCREAMING_SNAKE_CASE for the constant name
+
+## Evidence
+
+- Pattern in namingConventions.constants: SCREAMING_SNAKE_CASE
+
+---
+id: ibm-z-hackathon-instinct-import-style
+trigger: "When importing modules"
+confidence: 0.8
+domain: code-style
+source: repo-analysis
+source_repo: Minifigures/ibm-z-hackathon
+---
+
+# Ibm Z Hackathon Instinct Import Style
+
+## Action
+
+Use alias import style
+
+## Evidence
+
+- Pattern in importStyle: alias
+
+---
+id: ibm-z-hackathon-instinct-export-style
+trigger: "When exporting modules or components"
+confidence: 0.7
+domain: code-style
+source: repo-analysis
+source_repo: Minifigures/ibm-z-hackathon
+---
+
+# Ibm Z Hackathon Instinct Export Style
+
+## Action
+
+Use mixed export style (both named and default exports as appropriate)
+
+## Evidence
+
+- Pattern in exportStyle: mixed
+
+---
+id: ibm-z-hackathon-instinct-try-catch-errors
+trigger: "When handling errors in code"
+confidence: 0.8
+domain: code-style
+source: repo-analysis
+source_repo: Minifigures/ibm-z-hackathon
+---
+
+# Ibm Z Hackathon Instinct Try Catch Errors
+
+## Action
+
+Use try-catch blocks for error handling
+
+## Evidence
+
+- Pattern in errorHandling.style: try-catch
+
+---
+id: ibm-z-hackathon-instinct-no-custom-error-classes
+trigger: "When defining error handling logic"
+confidence: 0.7
+domain: code-style
+source: repo-analysis
+source_repo: Minifigures/ibm-z-hackathon
+---
+
+# Ibm Z Hackathon Instinct No Custom Error Classes
+
+## Action
+
+Do not create custom error classes
+
+## Evidence
+
+- Pattern in errorHandling.customErrorClasses: false
+
+---
+id: ibm-z-hackathon-instinct-git-commit-format
+trigger: "When writing a git commit message"
+confidence: 0.9
+domain: git
+source: repo-analysis
+source_repo: Minifigures/ibm-z-hackathon
+---
+
+# Ibm Z Hackathon Instinct Git Commit Format
+
+## Action
+
+Use the conventional commit format with 'feat' prefix for new features
+
+## Evidence
+
+- Pattern in commits.type: conventional
+- Pattern in commits.prefixes: ['feat']
+- Seen in commit: 'feat(ui): IBM Granite provenance pill + UN SDG impact badge'
+
+---
+id: ibm-z-hackathon-instinct-commit-length
+trigger: "When composing a commit message"
+confidence: 0.7
+domain: git
+source: repo-analysis
+source_repo: Minifigures/ibm-z-hackathon
+---
+
+# Ibm Z Hackathon Instinct Commit Length
+
+## Action
+
+Keep the commit message concise, around 59 characters on average
+
+## Evidence
+
+- Pattern in commits.averageLength: 59
+
+---
+id: ibm-z-hackathon-instinct-test-location-mixed
+trigger: "When adding new tests"
+confidence: 0.7
+domain: testing
+source: repo-analysis
+source_repo: Minifigures/ibm-z-hackathon
+---
+
+# Ibm Z Hackathon Instinct Test Location Mixed
+
+## Action
+
+Place test files in both source and dedicated test folders as appropriate (mixed location)
+
+## Evidence
+
+- Pattern in architecture.folderStructure.testLocation: mixed
+
