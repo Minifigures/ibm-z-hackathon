@@ -96,13 +96,17 @@ curl -s -X POST http://localhost:8000/simulate \
 
 A 200-run, 30-day, 70-region simulation completes in roughly 250 ms on a laptop, which is comfortably inside the PRD's < 1 s slider-to-map target.
 
+## Basemap & production deploy
+
+The frontend uses Stadia Maps' `alidade_smooth_dark` raster tiles for English labels. The free tier serves anonymous requests on `localhost` without an API key, which covers local dev and hackathon judging. **For any non-localhost deploy** you need to either (a) sign up for a free Stadia API key and append `?api_key=...` to the tile URL in `frontend/components/world-map.tsx`, or (b) self-host the underlying OpenMapTiles via something like `protomaps`. Anonymous deployed origins will get 401/403 from Stadia.
+
 ## Demo flow
 
 1. **Hook.** "Imagine a novel outbreak is detected in São Paulo today. Where does it go in the next month?"
 2. **Pick.** Click *Pathogen X*, change Origin to BRA, set R₀ to 3.0.
 3. **Mobility.** Toggle airport-only vs. airport + port. The spread arcs and import ranking change.
-4. **Transmission.** Click a country (say MEX). The forecast chart shows the 50% / 95% bands. Bump *Mask / distancing* to 50% and watch the curve flatten.
-5. **Top hubs.** Read the import ranking. Show why Madrid or Lisbon ranks high (gravity to BRA).
+4. **Transmission.** Hover or click a country (say MEX). The forecast chart shows the 50% / 95% bands. Click locks the selection so it survives the next hover; clicking empty ocean unlocks. Bump *Mask / distancing* to 50% and watch the curve flatten.
+5. **All countries.** Scroll the country panel — every region is ranked by median cumulative cases. Skip past the seed country (which dominates the ranking) to see the next exposed regions. Show why Madrid or Lisbon ranks high (gravity to BRA). The backend's `top_imports` array is still exposed via the API for downstream consumers.
 6. **Explanation.** Click *Explain*. Claude Haiku writes a paragraph grounded in the numbers.
 7. **Calibration.** Point at the coverage badge. "95% intervals contained truth in 93% of holdouts" (replace once the backtest harness ships).
 8. **Close.** "Mobility imports it, SEIR amplifies it, Monte Carlo bounds it, the LLM explains it."
