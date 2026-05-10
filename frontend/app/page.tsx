@@ -39,6 +39,7 @@ export default function Page() {
   const [req, setReq] = useState<SimulateRequest>(DEFAULT_REQ);
   const [result, setResult] = useState<SimulationResult | null>(null);
   const [selectedIso3, setSelectedIso3] = useState<string | null>(null);
+  const [lockedIso3, setLockedIso3] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [latencyMs, setLatencyMs] = useState<number | null>(null);
   const [explainText, setExplainText] = useState<string | null>(null);
@@ -75,6 +76,16 @@ export default function Page() {
 
   const update = (patch: Partial<SimulateRequest>) => setReq((cur) => ({ ...cur, ...patch }));
 
+  // Hover preview: only updates selection while nothing is locked.
+  const handleHover = useCallback((iso3: string) => {
+    setSelectedIso3((prev) => (lockedIso3 ? prev : iso3));
+  }, [lockedIso3]);
+  // Click locks (or clicking empty / passing null clears the lock).
+  const handlePick = useCallback((iso3: string | null) => {
+    setLockedIso3(iso3);
+    setSelectedIso3(iso3);
+  }, []);
+
   const onPickPreset = (id: string) => {
     const p = presets[id];
     if (!p) return;
@@ -106,6 +117,17 @@ export default function Page() {
     if (!result || !selectedIso3) return null;
     return result.regions.find((r) => r.iso3 === selectedIso3) ?? null;
   }, [result, selectedIso3]);
+
+  const allHubs = useMemo(() => {
+    if (!result) return [];
+    return result.regions
+      .map((r) => ({
+        iso3: r.iso3,
+        name: r.name,
+        expected_cases: r.cumulative_p50_final,
+      }))
+      .sort((a, b) => b.expected_cases - a.expected_cases);
+  }, [result]);
 
   const focusName = focusRegion?.name ?? null;
   const calibration = result?.calibration;
@@ -276,17 +298,22 @@ export default function Page() {
             arcs={result?.spread_arcs ?? []}
             startIso3={req.start_iso3}
             selectedIso3={selectedIso3}
-            onSelect={setSelectedIso3}
+            lockedIso3={lockedIso3}
+            onHover={handleHover}
+            onPick={handlePick}
           />
         </div>
 
         <div className="absolute bottom-0 left-0 right-0 grid grid-cols-3 gap-3 p-3 pointer-events-none">
           <div className="pointer-events-auto">
             <HubList
-              title="Top import hubs (median expected cases)"
-              rows={result?.top_imports ?? []}
+              title="All countries (median cumulative cases)"
+              rows={allHubs}
               valueKey="expected_cases"
-              onSelect={setSelectedIso3}
+              onHover={handleHover}
+              onPick={handlePick}
+              selectedIso3={selectedIso3}
+              maxHeight="260px"
             />
           </div>
           <div className="pointer-events-auto">
