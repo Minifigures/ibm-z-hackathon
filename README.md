@@ -163,6 +163,8 @@ Done:
 - [x] SDG alignment badge + provenance pill in the UI
 - [x] Offline Wuhan-2020 backtest (frozen JHU CSSE truth, deflated by reporting fraction rho=0.10) surfacing CRPS, multibin log score, and 50/95% coverage in `calibration.offline_backtest`
 - [x] /nowcast endpoint capped at 365 observations and rate-limited to 10 calls per minute per IP. /disease-params rate-limited to 20 per minute per IP.
+- [x] Real-data mobility ingestion wired into the simulator: OpenFlights routes (`real_air_hub`), UN DESA 2020 bilateral migrant stocks (2,790 corridors via `un_migrant_multiplier_matrix`), US BTS T-100 2019 passenger volumes (`bts_us_anchored_flows` rescaling the USA row+column), Top-50 container ports TEU (`real_port_hub`), and a hand-curated bilateral-corridor table. Eurostat AVIA_PAOCC is loaded but intentionally inactive (overlay net-degraded backtest rho on mpox). All wired into `combined_mobility()` with synthetic-hub fallbacks for missing pairs.
+- [x] `GET /data-sources` provenance endpoint surfacing the manifest of every loaded dataset (file, source, year, n_records, active flag, file mtime), so judges can see at a glance which feeds are live.
 - [x] Auto-deploy to IBM VSI on push to `main` with Next.js `/api/*` rewrites so the frontend works behind nginx OR on raw :3000
 
 Open:

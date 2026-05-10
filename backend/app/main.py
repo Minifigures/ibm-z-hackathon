@@ -21,6 +21,7 @@ from pydantic import BaseModel, Field
 
 load_dotenv()
 
+from .data_sources import manifest as data_sources_manifest
 from .disease_lookup import lookup as disease_lookup
 from .explain import explain
 from .mobility import load_countries
@@ -91,6 +92,12 @@ class DiseaseLookupRequest(BaseModel):
 @app.get("/health")
 def health() -> dict[str, str]:
     return {"status": "ok"}
+
+
+@app.get("/data-sources")
+def data_sources() -> dict[str, Any]:
+    """Manifest of real-world mobility datasets feeding the simulator."""
+    return data_sources_manifest()
 
 
 @app.get("/countries")
