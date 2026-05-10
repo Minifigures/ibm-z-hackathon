@@ -46,6 +46,10 @@ export default function Page() {
   const [explainText, setExplainText] = useState<string | null>(null);
   const [explainSource, setExplainSource] = useState<string | null>(null);
   const [explainLoading, setExplainLoading] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [hubsCollapsed, setHubsCollapsed] = useState(false);
+  const [forecastCollapsed, setForecastCollapsed] = useState(false);
+  const [explainCollapsed, setExplainCollapsed] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -127,7 +131,10 @@ export default function Page() {
   const calibration = result?.calibration;
 
   return (
-    <main className="grid grid-cols-[360px_1fr] grid-rows-[auto_1fr] h-screen w-screen overflow-hidden bg-ink-900 text-slate-100">
+    <main
+      className="grid grid-rows-[auto_1fr] h-screen w-screen overflow-hidden bg-ink-900 text-slate-100"
+      style={{ gridTemplateColumns: `${sidebarCollapsed ? 36 : 360}px 1fr` }}
+    >
       <header className="col-span-2 border-b border-ink-600 bg-ink-800 px-4 py-2 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="w-2 h-2 rounded-full bg-accent shadow-[0_0_8px_2px_rgba(124,242,200,0.6)]" />
@@ -148,9 +155,39 @@ export default function Page() {
         </div>
       </header>
 
+      {sidebarCollapsed ? (
+        <aside className="row-start-2 border-r border-ink-600 bg-ink-800 flex flex-col items-center pt-3">
+          <button
+            type="button"
+            aria-label="Expand scenario panel"
+            aria-expanded={false}
+            onClick={() => setSidebarCollapsed(false)}
+            className="w-6 h-6 inline-flex items-center justify-center rounded border border-ink-600 text-slate-400 hover:border-slate-400 hover:text-slate-200 text-[14px] leading-none"
+          >
+            +
+          </button>
+          <div
+            className="mt-3 text-[10px] uppercase tracking-wider text-slate-500"
+            style={{ writingMode: "vertical-rl" }}
+          >
+            Scenario
+          </div>
+        </aside>
+      ) : (
       <aside className="row-start-2 overflow-y-auto border-r border-ink-600 bg-ink-800 p-4 space-y-4">
         <section>
-          <h2 className="text-xs uppercase tracking-wider text-slate-400 mb-2">Scenario</h2>
+          <div className="flex items-center justify-between mb-2">
+            <h2 className="text-xs uppercase tracking-wider text-slate-400">Scenario</h2>
+            <button
+              type="button"
+              aria-label="Minimize scenario panel"
+              aria-expanded={true}
+              onClick={() => setSidebarCollapsed(true)}
+              className="w-5 h-5 inline-flex items-center justify-center rounded border border-ink-600 text-slate-400 hover:border-slate-400 hover:text-slate-200 text-[12px] leading-none"
+            >
+              −
+            </button>
+          </div>
           <div className="mb-3">
             <DiseaseSearch onApply={onAutoFill} />
           </div>
@@ -188,7 +225,7 @@ export default function Page() {
         <section className="space-y-3">
           <SliderRow
             label="R₀"
-            hint="Basic reproduction number"
+            info="Basic reproduction number — the average number of new infections a single infected person causes in a fully susceptible population."
             value={req.r0}
             min={0.5}
             max={5}
@@ -198,6 +235,7 @@ export default function Page() {
           />
           <SliderRow
             label="Incubation (days)"
+            info="Average time from exposure to becoming infectious. Longer incubation means slower onset but more silent spread."
             value={req.incubation_days}
             min={1}
             max={21}
@@ -207,6 +245,7 @@ export default function Page() {
           />
           <SliderRow
             label="Infectious period (days)"
+            info="Average number of days an infected person can transmit the disease to others before recovering or being isolated."
             value={req.infectious_days}
             min={1}
             max={21}
@@ -216,6 +255,7 @@ export default function Page() {
           />
           <SliderRow
             label="CFR (%)"
+            info="Case fatality rate — the percentage of confirmed cases that result in death."
             value={req.cfr_pct}
             min={0.01}
             max={30}
@@ -229,6 +269,7 @@ export default function Page() {
           <h2 className="text-xs uppercase tracking-wider text-slate-400">Mobility</h2>
           <SliderRow
             label="Air weight"
+            info="Multiplier on air-travel flow between countries. Higher values amplify spread along flight routes."
             value={req.air_weight}
             min={0}
             max={2}
@@ -238,6 +279,7 @@ export default function Page() {
           />
           <SliderRow
             label="Port weight"
+            info="Multiplier on maritime / port-based flow. Higher values amplify spread through shipping and cruise routes."
             value={req.port_weight}
             min={0}
             max={2}
@@ -247,6 +289,7 @@ export default function Page() {
           />
           <SliderRow
             label="Travel restriction"
+            info="Fraction of cross-border mobility removed by policies (border closures, quarantines). 0% = open borders, 100% = no travel."
             value={req.travel_restriction}
             min={0}
             max={1}
@@ -256,6 +299,7 @@ export default function Page() {
           />
           <SliderRow
             label="Mask / distancing"
+            info="Reduction in per-contact transmission from masks, distancing, and hygiene measures. 0% = no effect, 100% = transmission fully blocked."
             value={req.mask_intervention}
             min={0}
             max={1}
@@ -268,6 +312,7 @@ export default function Page() {
         <section className="space-y-3 pt-3 border-t border-ink-600">
           <SliderRow
             label="Forecast horizon"
+            info="How many days into the future the simulation projects. Longer horizons compound uncertainty."
             value={req.horizon_days}
             min={7}
             max={120}
@@ -277,6 +322,7 @@ export default function Page() {
           />
           <SliderRow
             label="Monte Carlo runs"
+            info="Number of stochastic simulation trajectories. More runs give tighter confidence intervals at the cost of compute time."
             value={req.n_runs}
             min={50}
             max={1000}
@@ -286,6 +332,7 @@ export default function Page() {
           />
         </section>
       </aside>
+      )}
 
       <section className="row-start-2 relative">
         <div className="absolute inset-0">
@@ -306,6 +353,8 @@ export default function Page() {
               rows={result?.top_imports ?? []}
               valueKey="expected_cases"
               onSelect={setSelectedIso3}
+              collapsed={hubsCollapsed}
+              onToggleCollapse={() => setHubsCollapsed((v) => !v)}
             />
           </div>
           <div className="pointer-events-auto">
@@ -313,6 +362,8 @@ export default function Page() {
               <ForecastChart
                 title={`Forecast · ${focusRegion.name}`}
                 quantiles={focusRegion.quantiles}
+                collapsed={forecastCollapsed}
+                onToggleCollapse={() => setForecastCollapsed((v) => !v)}
               />
             ) : (
               <div className="rounded-md border border-ink-600 bg-ink-800 p-3 text-xs text-slate-500">
@@ -328,6 +379,8 @@ export default function Page() {
               loading={explainLoading}
               onRequest={onExplain}
               focusName={focusName}
+              collapsed={explainCollapsed}
+              onToggleCollapse={() => setExplainCollapsed((v) => !v)}
             />
           </div>
         </div>

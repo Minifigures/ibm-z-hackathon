@@ -7,16 +7,30 @@ type Props = {
   rows: HubRow[];
   valueKey: "expected_cases" | "score";
   onSelect?: (iso3: string) => void;
+  collapsed?: boolean;
+  onToggleCollapse?: () => void;
 };
 
-export function HubList({ title, rows, valueKey, onSelect }: Props) {
+export function HubList({ title, rows, valueKey, onSelect, collapsed, onToggleCollapse }: Props) {
   const max = Math.max(...rows.map((r) => Number(r[valueKey] ?? 0)), 1);
 
   return (
     <div className="rounded-md border border-ink-600 bg-ink-800">
-      <div className="px-3 py-2 border-b border-ink-600">
+      <div className="px-3 py-2 border-b border-ink-600 flex items-center justify-between gap-2">
         <h3 className="text-xs uppercase tracking-wide text-slate-400">{title}</h3>
+        {onToggleCollapse ? (
+          <button
+            type="button"
+            aria-label={collapsed ? "Expand" : "Minimize"}
+            aria-expanded={!collapsed}
+            onClick={onToggleCollapse}
+            className="w-5 h-5 inline-flex items-center justify-center rounded border border-ink-600 text-slate-400 hover:border-slate-400 hover:text-slate-200 text-[12px] leading-none"
+          >
+            {collapsed ? "+" : "−"}
+          </button>
+        ) : null}
       </div>
+      {collapsed ? null : (
       <ul>
         {rows.map((row, i) => {
           const v = Number(row[valueKey] ?? 0);
@@ -46,6 +60,7 @@ export function HubList({ title, rows, valueKey, onSelect }: Props) {
           );
         })}
       </ul>
+      )}
     </div>
   );
 }
