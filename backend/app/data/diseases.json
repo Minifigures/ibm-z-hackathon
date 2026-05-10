@@ -6,8 +6,9 @@
     "incubation_days": 5.0,
     "infectious_days": 6.0,
     "cfr_pct": 1.0,
-    "notes": "Default values reflect the ancestral-strain consensus from CDC and Imperial College reports (2020 to 2022).",
-    "citations": ["Liu et al. 2020 J Travel Med", "Verity et al. 2020 Lancet ID"]
+    "cryptic_preseeding": true,
+    "notes": "Default values reflect the ancestral-strain consensus from CDC and Imperial College reports (2020 to 2022). Cryptic pre-spread is documented (Davis 2021): SARS-CoV-2 reached Italy / Iran / France weeks before official case counts caught up, so the effective-distance pre-seeding variant fires.",
+    "citations": ["Liu et al. 2020 J Travel Med", "Verity et al. 2020 Lancet ID", "Davis et al. 2021 Nature"]
   },
   "flu": {
     "id": "flu",
@@ -16,7 +17,8 @@
     "incubation_days": 2.0,
     "infectious_days": 4.0,
     "cfr_pct": 0.1,
-    "notes": "Pandemic-level seasonal flu. CFR is age-weighted population average.",
+    "cryptic_preseeding": false,
+    "notes": "Pandemic-level seasonal flu. CFR is age-weighted population average. No cryptic pre-spread assumed: 2009 H1N1 was caught quickly in Veracruz hospitals; spread happened through travel after detection.",
     "citations": ["Biggerstaff et al. 2014 BMC Infect Dis"]
   },
   "mpox": {
@@ -26,8 +28,20 @@
     "incubation_days": 9.0,
     "infectious_days": 14.0,
     "cfr_pct": 0.2,
-    "notes": "2022 outbreak parameters; transmission heterogeneity is high so this is a population-average view.",
+    "cryptic_preseeding": false,
+    "notes": "2022 outbreak parameters; transmission heterogeneity is high so this is a population-average view. No cryptic pre-spread: clinical lesions are visible, and the 2022 outbreak propagated through specific MSM social networks rather than aggregate mobility.",
     "citations": ["Du et al. 2022 Lancet Reg Health Eur"]
+  },
+  "sars": {
+    "id": "sars",
+    "label": "SARS (2003)",
+    "r0": 2.7,
+    "incubation_days": 6.0,
+    "infectious_days": 8.0,
+    "cfr_pct": 11.0,
+    "cryptic_preseeding": false,
+    "notes": "2003 SARS-CoV outbreak parameters from Lipsitch et al. 2003 Science (R0 range 2.2-3.6). No cryptic pre-spread: clinical syndrome was recognised early and triggered rapid isolation; spread was mostly via super-spreader events at hospitals and international flights, not silent community transmission.",
+    "citations": ["Lipsitch et al. 2003 Science", "Riley et al. 2003 Science", "WHO Sit-Rep 24 (Apr 11 2003)"]
   },
   "pathogenx": {
     "id": "pathogenx",
@@ -36,7 +50,8 @@
     "incubation_days": 5.0,
     "infectious_days": 7.0,
     "cfr_pct": 2.0,
-    "notes": "Hypothetical novel pathogen. All parameters are user-tunable; presets are mid-range scenario.",
+    "cryptic_preseeding": true,
+    "notes": "Hypothetical novel pathogen. All parameters are user-tunable; presets are mid-range scenario. Conservative default: assume cryptic pre-spread for an unknown novel pathogen until clinical detection confirms otherwise.",
     "citations": []
   }
 }
