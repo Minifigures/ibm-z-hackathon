@@ -43,7 +43,7 @@ def test_presets_keys():
     r = client.get("/presets")
     assert r.status_code == 200
     data = r.json()
-    assert set(data.keys()) == {"covid19", "flu", "mpox", "pathogenx", "dengue2050"}
+    assert set(data.keys()) == {"covid19", "flu", "mpox", "sars", "ebola", "pathogenx", "dengue2050"}
     for v in data.values():
         assert {"id", "label", "r0", "incubation_days", "infectious_days", "cfr_pct"} <= v.keys()
 
@@ -75,8 +75,9 @@ def test_simulate_validates_ranges():
 
 
 def test_explain_returns_text_in_template_mode(monkeypatch):
-    # Force the templated branch by clearing the API key.
-    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+    # Force the templated branch by clearing the watsonx credentials.
+    monkeypatch.delenv("WATSONX_APIKEY", raising=False)
+    monkeypatch.delenv("WATSONX_PROJECT_ID", raising=False)
     sim = client.post("/simulate", json=_sim_payload()).json()
     r = client.post("/explain", json={"simulation": sim, "focus_iso3": sim["top_imports"][0]["iso3"]})
     assert r.status_code == 200

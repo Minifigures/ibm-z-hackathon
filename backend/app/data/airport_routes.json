@@ -1,0 +1,301 @@
+{
+  "_meta": {
+    "fields": {
+      "airport_routes": "Total inbound + outbound route legs touching the country",
+      "airport_unique_destinations": "Distinct destination ISO3 codes reachable via direct flights from the country's airports (route-degree proxy)"
+    },
+    "generated_utc": "2026-05-10T07:12:50+00:00",
+    "n_countries": 71,
+    "source": "OpenFlights routes.dat + airports.dat",
+    "source_urls": [
+      "https://raw.githubusercontent.com/jpatokal/openflights/master/data/routes.dat",
+      "https://raw.githubusercontent.com/jpatokal/openflights/master/data/airports.dat"
+    ]
+  },
+  "countries": {
+    "AFG": {
+      "airport_routes": 84,
+      "airport_unique_destinations": 5
+    },
+    "ARE": {
+      "airport_routes": 1492,
+      "airport_unique_destinations": 58
+    },
+    "ARG": {
+      "airport_routes": 511,
+      "airport_unique_destinations": 14
+    },
+    "AUS": {
+      "airport_routes": 2210,
+      "airport_unique_destinations": 19
+    },
+    "AUT": {
+      "airport_routes": 776,
+      "airport_unique_destinations": 38
+    },
+    "BEL": {
+      "airport_routes": 822,
+      "airport_unique_destinations": 35
+    },
+    "BGD": {
+      "airport_routes": 209,
+      "airport_unique_destinations": 16
+    },
+    "BRA": {
+      "airport_routes": 2793,
+      "airport_unique_destinations": 21
+    },
+    "CAN": {
+      "airport_routes": 3713,
+      "airport_unique_destinations": 40
+    },
+    "CHE": {
+      "airport_routes": 855,
+      "airport_unique_destinations": 42
+    },
+    "CHL": {
+      "airport_routes": 313,
+      "airport_unique_destinations": 12
+    },
+    "CHN": {
+      "airport_routes": 16319,
+      "airport_unique_destinations": 48
+    },
+    "COL": {
+      "airport_routes": 714,
+      "airport_unique_destinations": 12
+    },
+    "CUB": {
+      "airport_routes": 187,
+      "airport_unique_destinations": 14
+    },
+    "CZE": {
+      "airport_routes": 385,
+      "airport_unique_destinations": 27
+    },
+    "DEU": {
+      "airport_routes": 4688,
+      "airport_unique_destinations": 58
+    },
+    "DNK": {
+      "airport_routes": 618,
+      "airport_unique_destinations": 33
+    },
+    "DZA": {
+      "airport_routes": 442,
+      "airport_unique_destinations": 19
+    },
+    "EGY": {
+      "airport_routes": 612,
+      "airport_unique_destinations": 33
+    },
+    "ESP": {
+      "airport_routes": 5065,
+      "airport_unique_destinations": 47
+    },
+    "ETH": {
+      "airport_routes": 263,
+      "airport_unique_destinations": 22
+    },
+    "FIN": {
+      "airport_routes": 439,
+      "airport_unique_destinations": 30
+    },
+    "FRA": {
+      "airport_routes": 3856,
+      "airport_unique_destinations": 58
+    },
+    "GBR": {
+      "airport_routes": 5300,
+      "airport_unique_destinations": 55
+    },
+    "GHA": {
+      "airport_routes": 127,
+      "airport_unique_destinations": 16
+    },
+    "GRC": {
+      "airport_routes": 1601,
+      "airport_unique_destinations": 27
+    },
+    "HKG": {
+      "airport_routes": 710,
+      "airport_unique_destinations": 34
+    },
+    "HUN": {
+      "airport_routes": 199,
+      "airport_unique_destinations": 26
+    },
+    "IDN": {
+      "airport_routes": 1668,
+      "airport_unique_destinations": 16
+    },
+    "IND": {
+      "airport_routes": 3011,
+      "airport_unique_destinations": 38
+    },
+    "IRL": {
+      "airport_routes": 590,
+      "airport_unique_destinations": 24
+    },
+    "IRN": {
+      "airport_routes": 864,
+      "airport_unique_destinations": 21
+    },
+    "IRQ": {
+      "airport_routes": 151,
+      "airport_unique_destinations": 9
+    },
+    "ISR": {
+      "airport_routes": 292,
+      "airport_unique_destinations": 31
+    },
+    "ITA": {
+      "airport_routes": 3555,
+      "airport_unique_destinations": 52
+    },
+    "JPN": {
+      "airport_routes": 2577,
+      "airport_unique_destinations": 32
+    },
+    "KAZ": {
+      "airport_routes": 416,
+      "airport_unique_destinations": 18
+    },
+    "KEN": {
+      "airport_routes": 401,
+      "airport_unique_destinations": 20
+    },
+    "KOR": {
+      "airport_routes": 1178,
+      "airport_unique_destinations": 37
+    },
+    "LKA": {
+      "airport_routes": 230,
+      "airport_unique_destinations": 18
+    },
+    "MAR": {
+      "airport_routes": 619,
+      "airport_unique_destinations": 26
+    },
+    "MEX": {
+      "airport_routes": 2116,
+      "airport_unique_destinations": 18
+    },
+    "MMR": {
+      "airport_routes": 208,
+      "airport_unique_destinations": 12
+    },
+    "MYS": {
+      "airport_routes": 1130,
+      "airport_unique_destinations": 29
+    },
+    "NGA": {
+      "airport_routes": 251,
+      "airport_unique_destinations": 18
+    },
+    "NLD": {
+      "airport_routes": 1136,
+      "airport_unique_destinations": 52
+    },
+    "NOR": {
+      "airport_routes": 1291,
+      "airport_unique_destinations": 27
+    },
+    "NPL": {
+      "airport_routes": 106,
+      "airport_unique_destinations": 12
+    },
+    "NZL": {
+      "airport_routes": 466,
+      "airport_unique_destinations": 11
+    },
+    "PAK": {
+      "airport_routes": 566,
+      "airport_unique_destinations": 21
+    },
+    "PER": {
+      "airport_routes": 363,
+      "airport_unique_destinations": 12
+    },
+    "PHL": {
+      "airport_routes": 789,
+      "airport_unique_destinations": 17
+    },
+    "POL": {
+      "airport_routes": 725,
+      "airport_unique_destinations": 28
+    },
+    "PRT": {
+      "airport_routes": 1071,
+      "airport_unique_destinations": 30
+    },
+    "QAT": {
+      "airport_routes": 377,
+      "airport_unique_destinations": 50
+    },
+    "ROU": {
+      "airport_routes": 355,
+      "airport_unique_destinations": 22
+    },
+    "RUS": {
+      "airport_routes": 3690,
+      "airport_unique_destinations": 43
+    },
+    "SAU": {
+      "airport_routes": 1116,
+      "airport_unique_destinations": 31
+    },
+    "SEN": {
+      "airport_routes": 139,
+      "airport_unique_destinations": 13
+    },
+    "SGP": {
+      "airport_routes": 820,
+      "airport_unique_destinations": 33
+    },
+    "SWE": {
+      "airport_routes": 950,
+      "airport_unique_destinations": 30
+    },
+    "THA": {
+      "airport_routes": 1209,
+      "airport_unique_destinations": 44
+    },
+    "TUR": {
+      "airport_routes": 1965,
+      "airport_unique_destinations": 55
+    },
+    "TWN": {
+      "airport_routes": 826,
+      "airport_unique_destinations": 20
+    },
+    "TZA": {
+      "airport_routes": 152,
+      "airport_unique_destinations": 9
+    },
+    "UKR": {
+      "airport_routes": 424,
+      "airport_unique_destinations": 24
+    },
+    "USA": {
+      "airport_routes": 26193,
+      "airport_unique_destinations": 49
+    },
+    "UZB": {
+      "airport_routes": 281,
+      "airport_unique_destinations": 19
+    },
+    "VEN": {
+      "airport_routes": 384,
+      "airport_unique_destinations": 13
+    },
+    "VNM": {
+      "airport_routes": 576,
+      "airport_unique_destinations": 18
+    },
+    "ZAF": {
+      "airport_routes": 538,
+      "airport_unique_destinations": 25
+    }
+  }
+}

@@ -14,12 +14,17 @@ import json
 from pathlib import Path
 from typing import Any, Literal
 
+from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
+load_dotenv()
+
+from .disease_lookup import lookup as disease_lookup
 from .explain import explain
 from .mobility import load_countries
+from .nowcast import NowcastObservation, NowcastParams, run_nowcast
 from .simulate import SimParams, run
 
 DATA_DIR = Path(__file__).parent / "data"
@@ -39,7 +44,7 @@ app.add_middleware(
 
 
 class SimulateRequest(BaseModel):
-    disease_id: Literal["covid19", "flu", "mpox", "pathogenx", "dengue2050"] = "covid19"
+    disease_id: Literal["covid19", "flu", "mpox", "sars", "ebola", "pathogenx", "dengue2050"] = "covid19"
     start_iso3: str = Field("USA", min_length=3, max_length=3)
     r0: float = Field(2.5, ge=0.1, le=8.0)
     incubation_days: float = Field(5.0, ge=0.5, le=30.0)
@@ -56,6 +61,22 @@ class SimulateRequest(BaseModel):
 class ExplainRequest(BaseModel):
     simulation: dict[str, Any]
     focus_iso3: str | None = None
+
+
+class NowcastObservationModel(BaseModel):
+    day: int = Field(..., ge=0, le=365)
+    cumulative_cases: float = Field(..., ge=0.0)
+
+
+class NowcastRequest(SimulateRequest):
+    observations: list[NowcastObservationModel]
+    n_particles: int = Field(400, ge=50, le=2000)
+    rho_min: float = Field(0.02, gt=0.0, lt=1.0)
+    rho_max: float = Field(0.5, gt=0.0, le=1.0)
+
+
+class DiseaseLookupRequest(BaseModel):
+    name: str = Field(..., min_length=1, max_length=120)
 
 
 @app.get("/health")
@@ -110,3 +131,49 @@ def simulate(req: SimulateRequest) -> dict[str, Any]:
 @app.post("/explain")
 def explain_endpoint(req: ExplainRequest) -> dict[str, str]:
     return explain(req.simulation, focus_iso3=req.focus_iso3)
+
+
+@app.post("/nowcast")
+def nowcast_endpoint(req: NowcastRequest) -> dict[str, Any]:
+    if req.rho_min >= req.rho_max:
+        raise HTTPException(status_code=400, detail="rho_min must be < rho_max")
+    base = SimParams(
+        disease_id=req.disease_id,
+        start_iso3=req.start_iso3.upper(),
+        r0=req.r0,
+        incubation_days=req.incubation_days,
+        infectious_days=req.infectious_days,
+        cfr_pct=req.cfr_pct,
+        air_weight=req.air_weight,
+        port_weight=req.port_weight,
+        travel_restriction=req.travel_restriction,
+        mask_intervention=req.mask_intervention,
+        horizon_days=req.horizon_days,
+        n_runs=req.n_particles,
+    )
+    try:
+        return run_nowcast(
+            NowcastParams(
+                base=base,
+                observations=[
+                    NowcastObservation(day=o.day, cumulative_cases=o.cumulative_cases)
+                    for o in req.observations
+                ],
+                n_particles=req.n_particles,
+                rho_min=req.rho_min,
+                rho_max=req.rho_max,
+            )
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@app.post("/disease-params")
+def disease_params_endpoint(req: DiseaseLookupRequest) -> dict[str, Any]:
+    result = disease_lookup(req.name)
+    status = result.get("status")
+    if status == "unconfigured":
+        raise HTTPException(status_code=503, detail=result)
+    if status == "rejected":
+        raise HTTPException(status_code=422, detail=result)
+    return result

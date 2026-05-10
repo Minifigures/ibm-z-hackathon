@@ -45,3 +45,17 @@ Master_Final_v5.md
 Master_v3.md
 Strategy_Update_v2.md
 Tech_Stacks.md
+
+# Cached raw data downloads (reproducible from backend/scripts/ingest_*.py)
+backend/scripts/data/kaggle/
+backend/scripts/data/eurostat/
+backend/scripts/data/*.dat
+backend/scripts/data/*.xlsx
+backend/scripts/data/*.csv
+backend/scripts/data/m49_to_iso3.json
+
+# Cached backtest ground-truth (downloaded by jhu_data.py / fetch in validate.py)
+backend/backtest/data/*.csv
+
+# Local Python venvs and shells
+backend/.venv/

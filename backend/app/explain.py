@@ -64,6 +64,18 @@ def _format_context(simulation: dict[str, Any], focus_iso3: str | None) -> str:
                 f"  95% interval at horizon: [{q['p2_5'][-1]:.0f}, {q['p97_5'][-1]:.0f}]",
                 f"  Active prevalence at horizon (median /100k): {match['prevalence_p50_per_100k']:.1f}",
             ]
+            d_eff = match.get("effective_distance_from_seed")
+            arrival = match.get("predicted_arrival_day")
+            if d_eff is not None:
+                lines.append(
+                    f"  Effective distance from seed (Brockmann-Helbing 2013): {d_eff:.2f}"
+                )
+            if arrival is not None:
+                lines.append(f"  Predicted arrival day (median I/N > 1/100k): day {arrival}")
+            elif arrival is None and d_eff is not None:
+                lines.append(
+                    "  Predicted arrival within horizon: not crossed (effective distance very large)."
+                )
     return "\n".join(lines)
 
 
@@ -76,11 +88,29 @@ def _template_fallback(simulation: dict[str, Any], focus_iso3: str | None) -> st
 
     if region:
         q = region["quantiles"]
+        d_eff = region.get("effective_distance_from_seed")
+        arrival = region.get("predicted_arrival_day")
+        eff_phrase = (
+            f" Effective distance from {p['start_iso3']} on the air-route graph is "
+            f"{d_eff:.2f} (Brockmann-Helbing 2013)"
+            if d_eff is not None
+            else ""
+        )
+        if arrival is not None:
+            arrival_phrase = (
+                f", with median active prevalence first crossing 1/100k around day {arrival}"
+            )
+        elif d_eff is not None:
+            arrival_phrase = (
+                ", and active prevalence is not projected to cross 1/100k within the horizon"
+            )
+        else:
+            arrival_phrase = ""
         return (
             f"At an R0 of {p['r0_median']:.1f} seeded in {p['start_iso3']}, the model projects "
             f"a median cumulative case count of {region['cumulative_p50_final']:.0f} in {region['name']} "
             f"by day {simulation['horizon_days']}, with a 95% interval of "
-            f"{q['p2_5'][-1]:.0f} to {q['p97_5'][-1]:.0f}. "
+            f"{q['p2_5'][-1]:.0f} to {q['p97_5'][-1]:.0f}.{eff_phrase}{arrival_phrase}. "
             f"This is driven primarily by air-route exposure between {p['start_iso3']} and {region['iso3']}; "
             f"the current intervention multiplier of {p['intervention_multiplier']:.2f} and travel "
             f"restriction of {p['travel_restriction'] * 100:.0f}% are already included. "
