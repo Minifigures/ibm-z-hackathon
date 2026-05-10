@@ -1,0 +1,279 @@
+# Instincts generated from https://github.com/Minifigures/ibm-z-hackathon
+# Generated: 2026-05-10T09:21:58.589Z
+# Version: 2.0
+# NOTE: This file supplements (does not replace) any existing curated instincts.
+# High-confidence manually curated instincts should be preserved alongside these.
+
+---
+id: ibm-z-hackathon-commit-conventional
+trigger: "when writing a commit message"
+confidence: 0.85
+domain: git
+source: repo-analysis
+source_repo: https://github.com/Minifigures/ibm-z-hackathon
+---
+
+# Ibm Z Hackathon Commit Conventional
+
+## Action
+
+Use conventional commit format with prefixes: fix
+
+## Evidence
+
+- 1 commits analyzed
+- Detected conventional commit pattern
+- Examples: fix(explain): harden watsonx provider chain after PR #7 review
+
+---
+id: ibm-z-hackathon-commit-length
+trigger: "when writing a commit message"
+confidence: 0.6
+domain: git
+source: repo-analysis
+source_repo: https://github.com/Minifigures/ibm-z-hackathon
+---
+
+# Ibm Z Hackathon Commit Length
+
+## Action
+
+Write moderate-length commit messages (~62 characters)
+
+## Evidence
+
+- Average commit message length: 62 chars
+- Based on 1 commits
+
+---
+id: ibm-z-hackathon-naming-files
+trigger: "when creating a new file"
+confidence: 0.8
+domain: code-style
+source: repo-analysis
+source_repo: https://github.com/Minifigures/ibm-z-hackathon
+---
+
+# Ibm Z Hackathon Naming Files
+
+## Action
+
+Use snake_case naming convention
+
+## Evidence
+
+- Analyzed file naming patterns in repository
+- Dominant pattern: snake_case
+
+---
+id: ibm-z-hackathon-import-relative
+trigger: "when importing modules"
+confidence: 0.75
+domain: code-style
+source: repo-analysis
+source_repo: https://github.com/Minifigures/ibm-z-hackathon
+---
+
+# Ibm Z Hackathon Import Relative
+
+## Action
+
+Use relative imports for project files
+
+## Evidence
+
+- Import analysis shows relative import pattern
+- Example: import { x } from '../lib/x'
+
+---
+id: ibm-z-hackathon-export-style
+trigger: "when exporting from a module"
+confidence: 0.7
+domain: code-style
+source: repo-analysis
+source_repo: https://github.com/Minifigures/ibm-z-hackathon
+---
+
+# Ibm Z Hackathon Export Style
+
+## Action
+
+Prefer named exports
+
+## Evidence
+
+- Export pattern analysis
+- Dominant style: named
+
+---
+id: ibm-z-hackathon-instinct-file-naming
+trigger: "When creating a new Python file"
+confidence: 0.9
+domain: code-style
+source: repo-analysis
+source_repo: Minifigures/ibm-z-hackathon
+---
+
+# Ibm Z Hackathon Instinct File Naming
+
+## Action
+
+Name the file using snake_case
+
+## Evidence
+
+- Pattern in namingConventions.files
+
+---
+id: ibm-z-hackathon-instinct-function-naming
+trigger: "When defining a new function"
+confidence: 0.8
+domain: code-style
+source: repo-analysis
+source_repo: Minifigures/ibm-z-hackathon
+---
+
+# Ibm Z Hackathon Instinct Function Naming
+
+## Action
+
+Name the function using camelCase
+
+## Evidence
+
+- Pattern in namingConventions.functions
+
+---
+id: ibm-z-hackathon-instinct-class-naming
+trigger: "When defining a new class"
+confidence: 0.9
+domain: code-style
+source: repo-analysis
+source_repo: Minifigures/ibm-z-hackathon
+---
+
+# Ibm Z Hackathon Instinct Class Naming
+
+## Action
+
+Name the class using PascalCase
+
+## Evidence
+
+- Pattern in namingConventions.classes
+
+---
+id: ibm-z-hackathon-instinct-constant-naming
+trigger: "When defining a constant"
+confidence: 0.9
+domain: code-style
+source: repo-analysis
+source_repo: Minifigures/ibm-z-hackathon
+---
+
+# Ibm Z Hackathon Instinct Constant Naming
+
+## Action
+
+Name the constant using SCREAMING_SNAKE_CASE
+
+## Evidence
+
+- Pattern in namingConventions.constants
+
+---
+id: ibm-z-hackathon-instinct-import-style
+trigger: "When importing modules in Python files"
+confidence: 0.8
+domain: code-style
+source: repo-analysis
+source_repo: Minifigures/ibm-z-hackathon
+---
+
+# Ibm Z Hackathon Instinct Import Style
+
+## Action
+
+Use relative imports
+
+## Evidence
+
+- Pattern in importStyle
+
+---
+id: ibm-z-hackathon-instinct-export-style
+trigger: "When exporting functions or classes"
+confidence: 0.8
+domain: code-style
+source: repo-analysis
+source_repo: Minifigures/ibm-z-hackathon
+---
+
+# Ibm Z Hackathon Instinct Export Style
+
+## Action
+
+Use named exports
+
+## Evidence
+
+- Pattern in exportStyle
+
+---
+id: ibm-z-hackathon-instinct-commit-format
+trigger: "When committing code changes"
+confidence: 0.9
+domain: git
+source: repo-analysis
+source_repo: Minifigures/ibm-z-hackathon
+---
+
+# Ibm Z Hackathon Instinct Commit Format
+
+## Action
+
+Use the conventional commit format with a 'fix' prefix when fixing issues
+
+## Evidence
+
+- Pattern in commits.prefixes
+- Seen in commit 'fix(explain): harden watsonx provider chain after PR #7 review'
+
+---
+id: ibm-z-hackathon-instinct-commit-length
+trigger: "When writing a commit message"
+confidence: 0.7
+domain: git
+source: repo-analysis
+source_repo: Minifigures/ibm-z-hackathon
+---
+
+# Ibm Z Hackathon Instinct Commit Length
+
+## Action
+
+Keep the commit message concise, around 62 characters on average
+
+## Evidence
+
+- Pattern in commits.averageLength
+
+---
+id: ibm-z-hackathon-instinct-test-location
+trigger: "When adding or locating tests"
+confidence: 0.7
+domain: testing
+source: repo-analysis
+source_repo: Minifigures/ibm-z-hackathon
+---
+
+# Ibm Z Hackathon Instinct Test Location
+
+## Action
+
+Place tests in mixed locations (not strictly separated from source code)
+
+## Evidence
+
+- Pattern in architecture.folderStructure.testLocation
+
