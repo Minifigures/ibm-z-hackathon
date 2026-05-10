@@ -1,5 +1,18 @@
 "use client";
 
+function sourceLabel(source: string): string {
+  switch (source) {
+    case "watsonx":
+      return "IBM Granite via watsonx.ai";
+    case "anthropic":
+      return "Claude Haiku";
+    case "template":
+      return "templated fallback";
+    default:
+      return source;
+  }
+}
+
 type Props = {
   text: string | null;
   source: string | null;
@@ -34,7 +47,7 @@ export function ExplainPanel({ text, source, loading, onRequest, focusName }: Pr
       </div>
       {source ? (
         <div className="px-3 pb-2 text-[10px] text-slate-500">
-          source: {source === "anthropic" ? "Claude Haiku" : "templated fallback"}
+          source: {sourceLabel(source)}
         </div>
       ) : null}
     </div>
