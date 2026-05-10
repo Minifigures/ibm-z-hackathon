@@ -59,9 +59,15 @@ jobs:
           sudo /bin/systemctl restart disease-outflow-backend.service
           sudo /bin/systemctl restart disease-outflow-frontend.service
 
-          echo "==> health"
-          sleep 3
-          curl -fsS http://127.0.0.1:8000/health || (echo "backend health failed"; exit 1)
-          curl -fsS -o /dev/null http://127.0.0.1:3000/ || (echo "frontend not serving"; exit 1)
+          echo "==> health (retry up to 60s)"
+          ok_back=0; ok_front=0
+          for i in $(seq 1 30); do
+            if [ "$ok_back" -eq 0 ]  && curl -fsS --max-time 5 http://127.0.0.1:8000/health >/dev/null 2>&1; then ok_back=1; fi
+            if [ "$ok_front" -eq 0 ] && curl -fsS --max-time 5 -o /dev/null http://127.0.0.1:3000/   2>/dev/null; then ok_front=1; fi
+            if [ "$ok_back" -eq 1 ] && [ "$ok_front" -eq 1 ]; then break; fi
+            sleep 2
+          done
+          [ "$ok_back" -eq 1 ]  || { echo "backend health failed";  journalctl -u disease-outflow-backend  -n 40 --no-pager || true; exit 1; }
+          [ "$ok_front" -eq 1 ] || { echo "frontend not serving";   journalctl -u disease-outflow-frontend -n 40 --no-pager || true; exit 1; }
           echo "OK"
           REMOTE
