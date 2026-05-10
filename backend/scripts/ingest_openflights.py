@@ -136,33 +136,21 @@ NAME_TO_ISO3: dict[str, str] = {
 }
 
 
-def _download(url: str, dest: Path) -> None:
-    """Download URL to dest. Fails loudly if the network isn't reachable."""
-    logger.info("Downloading %s -> %s", url, dest)
-    try:
-        resp = requests.get(url, timeout=60)
-    except requests.RequestException as exc:
-        logger.error("Network error fetching %s: %s", url, exc)
-        raise SystemExit(2) from exc
-    if resp.status_code != 200:
-        logger.error("Bad HTTP status %s for %s", resp.status_code, url)
-        raise SystemExit(2)
-    dest.parent.mkdir(parents=True, exist_ok=True)
-    dest.write_bytes(resp.content)
-    logger.info("Wrote %d bytes", len(resp.content))
-
-
 def _ensure_raw_files() -> tuple[Path, Path]:
-    routes_path = RAW_DIR / "routes.dat"
-    airports_path = RAW_DIR / "airports.dat"
-    if not routes_path.exists():
-        _download(ROUTES_URL, routes_path)
-    else:
-        logger.info("Using cached %s", routes_path)
-    if not airports_path.exists():
-        _download(AIRPORTS_URL, airports_path)
-    else:
-        logger.info("Using cached %s", airports_path)
+    """Ensure the OpenFlights raw files are on disk. VSI mirror first, then
+    public github source. See scripts/_data_source.py for the precedence.
+    """
+    from ._data_source import fetch  # local import keeps top-level light
+    routes_path = fetch(
+        local=RAW_DIR / "routes.dat",
+        vsi_path="openflights/routes.dat",
+        public_url=ROUTES_URL,
+    )
+    airports_path = fetch(
+        local=RAW_DIR / "airports.dat",
+        vsi_path="openflights/airports.dat",
+        public_url=AIRPORTS_URL,
+    )
     return routes_path, airports_path
 
 

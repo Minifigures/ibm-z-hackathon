@@ -252,8 +252,18 @@ def _validate(scenario: str, params: SimParams, truth: dict[str, int], cmp_date:
 
 
 def _load_owid_mpox_truth() -> tuple[dict[str, int], int]:
-    """Read OWID mpox CSV; return (day-+30 dict, seed-day GBR count)."""
+    """Read OWID mpox CSV; return (day-+30 dict, seed-day GBR count).
+
+    Pulls from the VSI mirror first, then from owid/monkeypox on github.
+    """
     csv_path = Path(__file__).parent / "data" / "owid_mpox.csv"
+    if not csv_path.exists():
+        from scripts._data_source import fetch
+        fetch(
+            local=csv_path,
+            vsi_path="owid/owid_mpox.csv",
+            public_url="https://raw.githubusercontent.com/owid/monkeypox/main/owid-monkeypox-data.csv",
+        )
     truth: dict[str, int] = {}
     seed_count = 0
     with csv_path.open() as f:

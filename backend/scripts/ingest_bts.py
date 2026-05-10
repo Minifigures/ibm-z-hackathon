@@ -155,10 +155,20 @@ def aggregate(iata_to_iso: dict[str, str]) -> tuple[dict, dict, int]:
 
 
 def main():
-    if not BTS_CSV.exists():
-        sys.exit(f"BTS CSV not found at {BTS_CSV}")
-    if not AIRPORTS.exists():
-        sys.exit(f"airports.dat not found at {AIRPORTS} - run ingest_openflights.py first")
+    # VSI mirror first, then fall through. The Kaggle source needs an API
+    # token (parulpandey/us-international-air-traffic-data); the VSI hosts
+    # the same files unauthenticated for reproducibility.
+    from ._data_source import fetch
+    fetch(
+        local=BTS_CSV,
+        vsi_path="bts/International_Report_Passengers.csv",
+        public_url=None,  # Kaggle CSV requires `kaggle datasets download` + auth
+    )
+    fetch(
+        local=AIRPORTS,
+        vsi_path="openflights/airports.dat",
+        public_url="https://raw.githubusercontent.com/jpatokal/openflights/master/data/airports.dat",
+    )
 
     iata_to_iso = build_iata_to_iso3()
     modeled = build_modeled_iso3()

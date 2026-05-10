@@ -117,23 +117,23 @@ MACAU_PROVINCE_LABEL = "Macau"
 
 
 def fetch_jhu_csv(force_download: bool = False) -> str:
-    """Return the JHU confirmed-cases CSV body, downloading if not cached."""
-    CACHE_DIR.mkdir(parents=True, exist_ok=True)
+    """Return the JHU confirmed-cases CSV body, downloading if not cached.
+
+    VSI mirror first, then the archived JHU repo on GitHub. Override the
+    mirror with ``RAW_DATA_BASE=...``.
+    """
     if CACHE_FILE.exists() and not force_download:
         return CACHE_FILE.read_text(encoding="utf-8")
 
-    try:
-        resp = requests.get(JHU_URL, timeout=30)
-        resp.raise_for_status()
-    except requests.RequestException as exc:
-        raise RuntimeError(
-            f"Failed to download JHU CSSE data from {JHU_URL!r}. "
-            "If you are offline, place a copy of the CSV at "
-            f"{CACHE_FILE} and re-run."
-        ) from exc
-
-    CACHE_FILE.write_text(resp.text, encoding="utf-8")
-    return resp.text
+    # Defer import so that this module can be imported when scripts/_data_source
+    # is unavailable (e.g. minimal test environments).
+    from scripts._data_source import fetch
+    fetch(
+        local=CACHE_FILE,
+        vsi_path="jhu/time_series_covid19_confirmed_global.csv",
+        public_url=JHU_URL,
+    )
+    return CACHE_FILE.read_text(encoding="utf-8")
 
 
 def _iter_rows(csv_text: str) -> Iterator[list[str]]:

@@ -61,8 +61,16 @@ def linear_to_coords(idx: int, sizes: list[int]) -> list[int]:
 
 
 def main():
-    if not SRC.exists():
-        raise SystemExit(f"Source not found: {SRC}. Download it first.")
+    # VSI mirror first, then the Eurostat REST API as a fallback.
+    from ._data_source import fetch
+    fetch(
+        local=SRC,
+        vsi_path="eurostat/avia_paocc_2019.json",
+        public_url=(
+            "https://ec.europa.eu/eurostat/api/dissemination/sdmx/2.1/data/"
+            "avia_paocc?format=JSON&time=2019&unit=PAS&tra_meas=PAS_CRD&schedule=TOT&freq=A"
+        ),
+    )
     logger.info("Loading %s ...", SRC.name)
     with gzip.open(SRC, "rt", encoding="utf-8") as f:
         d = json.load(f)

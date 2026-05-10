@@ -44,8 +44,15 @@ DATA_START_ROW = 12  # row 11 is the WORLD/WORLD aggregate; data follows
 
 
 def main():
-    if not SRC.exists():
-        raise SystemExit(f"Source not found: {SRC}")
+    # VSI mirror first, then UN DESA. The UN site CloudFront's bots without a
+    # browser User-Agent, so we pass one if we fall through.
+    from ._data_source import fetch
+    fetch(
+        local=SRC,
+        vsi_path="un/un_migrant_stock_2020.xlsx",
+        public_url="https://www.un.org/development/desa/pd/sites/www.un.org.development.desa.pd/files/undesa_pd_2020_ims_stock_by_sex_destination_and_origin.xlsx",
+        public_headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"},
+    )
     if not M49_MAP.exists():
         raise SystemExit(f"M49 map not found: {M49_MAP}")
 
