@@ -1,4 +1,4 @@
-# Disease Outflow Forecaster
+# Pandexis · Disease Outflow Forecaster
 
 > Pick a disease and a starting city, drag a few sliders, watch a world map show where the outbreak most likely spreads next, with calibrated uncertainty and an AI-generated explanation a public-health analyst could actually use.
 
