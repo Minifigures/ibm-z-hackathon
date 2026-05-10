@@ -37,10 +37,16 @@ type Props = {
   /** When non-null, hover events do not override the selection. */
   lockedIso3?: string | null;
   startIso3: string;
-  /** Cursor entered a country — preview only; parent decides whether to honor it. */
+  /** Cursor entered a country, preview only; parent decides whether to honor it. */
   onHover: (iso3: string) => void;
   /** Click on a country (iso3) or empty ocean (null). Parent typically locks/unlocks. */
   onPick: (iso3: string | null) => void;
+  /**
+   * Day index to render. When null, use the final-horizon active prevalence
+   * already returned by /simulate. When set, render the cumulative-case proxy
+   * at quantiles.p50[currentDay] so the animation can scrub forward in time.
+   */
+  currentDay?: number | null;
 };
 
 function colorForPrevalence(p: number): string {
@@ -126,6 +132,7 @@ export function WorldMap({
   startIso3,
   onHover,
   onPick,
+  currentDay,
 }: Props) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<MapLibreMap | null>(null);
@@ -187,8 +194,18 @@ export function WorldMap({
       const regionByIso3 = new Map(regions.map((r) => [r.iso3, r]));
       const features = countries.map((c) => {
         const r = regionByIso3.get(c.iso3);
-        const prevalence = r?.prevalence_p50_per_100k ?? 0;
-        const cumulative = r?.cumulative_p50_final ?? 0;
+        const cumulativeFinal = r?.cumulative_p50_final ?? 0;
+        let prevalence: number;
+        let cumulative: number;
+        if (currentDay != null && r) {
+          const series = r.quantiles.p50;
+          const idx = Math.max(0, Math.min(currentDay, series.length - 1));
+          cumulative = series[idx];
+          prevalence = (cumulative / Math.max(r.population, 1)) * 100_000;
+        } else {
+          prevalence = r?.prevalence_p50_per_100k ?? 0;
+          cumulative = cumulativeFinal;
+        }
         return {
           type: "Feature" as const,
           id: c.iso3,
@@ -343,7 +360,7 @@ export function WorldMap({
 
     if (map.loaded()) apply();
     else map.once("load", apply);
-  }, [countries, regions, arcs, startIso3]);
+  }, [countries, regions, arcs, startIso3, currentDay]);
 
   // Lightweight selection effect: just toggles feature-state, no GeoJSON rebuild.
   const prevSelectedRef = useRef<string | null>(null);

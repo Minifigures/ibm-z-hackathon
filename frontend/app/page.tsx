@@ -7,6 +7,7 @@ import { ExplainPanel } from "@/components/explain-panel";
 import { SDGBadge } from "@/components/sdg-badge";
 import { HubList } from "@/components/hub-list";
 import { SliderRow } from "@/components/slider-row";
+import { TimeScrubber } from "@/components/time-scrubber";
 import {
   api,
   type Country,
@@ -46,6 +47,8 @@ export default function Page() {
   const [explainText, setExplainText] = useState<string | null>(null);
   const [explainSource, setExplainSource] = useState<string | null>(null);
   const [explainLoading, setExplainLoading] = useState(false);
+  const [currentDay, setCurrentDay] = useState<number | null>(null);
+  const [playing, setPlaying] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -74,6 +77,11 @@ export default function Page() {
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
   }, [req, runSimulation]);
+
+  // Clamp the scrubber to the new horizon when it changes.
+  useEffect(() => {
+    setCurrentDay((day) => (day == null ? null : Math.min(day, req.horizon_days)));
+  }, [req.horizon_days]);
 
   const update = (patch: Partial<SimulateRequest>) => setReq((cur) => ({ ...cur, ...patch }));
 
@@ -303,10 +311,32 @@ export default function Page() {
             lockedIso3={lockedIso3}
             onHover={handleHover}
             onPick={handlePick}
+            currentDay={currentDay}
           />
         </div>
 
-        <div className="absolute bottom-0 left-0 right-0 grid grid-cols-3 gap-3 p-3 pointer-events-none">
+        <div className="absolute bottom-0 left-0 right-0 flex flex-col gap-2 p-3 pointer-events-none">
+          <div className="pointer-events-auto">
+            <TimeScrubber
+              horizonDays={req.horizon_days}
+              currentDay={currentDay}
+              playing={playing}
+              onScrub={(d) => setCurrentDay(d)}
+              onPlayToggle={() => {
+                if (playing) {
+                  setPlaying(false);
+                } else {
+                  if (currentDay == null || currentDay >= req.horizon_days) setCurrentDay(0);
+                  setPlaying(true);
+                }
+              }}
+              onLive={() => {
+                setPlaying(false);
+                setCurrentDay(null);
+              }}
+            />
+          </div>
+          <div className="grid grid-cols-3 gap-3">
           <div className="pointer-events-auto">
             <HubList
               title="All countries (median cumulative cases)"
@@ -339,6 +369,7 @@ export default function Page() {
               onRequest={onExplain}
               focusName={focusName}
             />
+          </div>
           </div>
         </div>
       </section>
