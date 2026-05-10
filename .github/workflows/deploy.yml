@@ -1,0 +1,67 @@
+name: Deploy to VSI
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: {}
+
+concurrency:
+  group: deploy-vsi
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Configure SSH
+        env:
+          DEPLOY_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$DEPLOY_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -H "$DEPLOY_HOST" >> ~/.ssh/known_hosts 2>/dev/null
+
+      - name: Deploy
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+        run: |
+          ssh -o BatchMode=yes "$DEPLOY_USER@$DEPLOY_HOST" 'bash -s' <<'REMOTE'
+          set -euo pipefail
+          APP_DIR=/opt/disease-outflow
+          cd "$APP_DIR"
+
+          before_req=$(sha1sum backend/requirements.txt | awk '{print $1}')
+          before_pkg=$(sha1sum frontend/package-lock.json | awk '{print $1}')
+
+          git fetch --depth=1 origin main
+          git reset --hard origin/main
+
+          after_req=$(sha1sum backend/requirements.txt | awk '{print $1}')
+          after_pkg=$(sha1sum frontend/package-lock.json | awk '{print $1}')
+
+          if [ "$before_req" != "$after_req" ]; then
+            echo "==> backend deps changed, reinstalling"
+            backend/.venv/bin/pip install -r backend/requirements.txt --quiet
+          fi
+
+          if [ "$before_pkg" != "$after_pkg" ]; then
+            echo "==> frontend deps changed, npm ci"
+            (cd frontend && npm ci --no-audit --no-fund --silent)
+          fi
+
+          echo "==> rebuild frontend"
+          (cd frontend && npm run build)
+
+          echo "==> restart services"
+          sudo /bin/systemctl restart disease-outflow-backend.service
+          sudo /bin/systemctl restart disease-outflow-frontend.service
+
+          echo "==> health"
+          sleep 3
+          curl -fsS http://127.0.0.1:8000/health || (echo "backend health failed"; exit 1)
+          curl -fsS -o /dev/null http://127.0.0.1:3000/ || (echo "frontend not serving"; exit 1)
+          echo "OK"
+          REMOTE
