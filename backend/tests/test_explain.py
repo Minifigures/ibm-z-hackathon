@@ -80,7 +80,7 @@ def test_watsonx_provider_wins_when_configured(monkeypatch):
     assert "Granite says" in out["text"]
 
 
-def test_watsonx_request_error_falls_through_to_template(monkeypatch):
+def test_watsonx_request_error_records_error_chain_and_falls_through(monkeypatch):
     _clear_provider_env(monkeypatch)
     monkeypatch.setenv("WATSONX_APIKEY", "fake")
     monkeypatch.setenv("WATSONX_PROJECT_ID", "fake-project")
@@ -95,14 +95,74 @@ def test_watsonx_request_error_falls_through_to_template(monkeypatch):
     sim = _sim()
     out = explain(sim, focus_iso3=None)
     assert out["source"] == "template"
-    # The chain still produced a meaningful narrative.
     assert len(out["text"]) > 50
+    # The new contract surfaces the failed provider via error_chain so a judge
+    # inspecting /explain can see watsonx was attempted and why it bailed.
+    assert "error_chain" in out
+    assert out["error_chain"][0]["provider"] == "watsonx"
+    assert "HTTP 500" in out["error_chain"][0]["error"]
 
 
-def test_watsonx_not_configured_falls_through(monkeypatch):
+def test_watsonx_failure_then_anthropic_success_records_only_watsonx(monkeypatch):
+    """If a downstream provider succeeds, the upstream failure is still surfaced."""
     _clear_provider_env(monkeypatch)
-    # Only one of the two required vars set should keep watsonx disabled.
     monkeypatch.setenv("WATSONX_APIKEY", "fake")
+    monkeypatch.setenv("WATSONX_PROJECT_ID", "fake-project")
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-ant-fake")
+
+    from app import watsonx as wx_module
+
+    def boom(*args, **kwargs):
+        raise wx_module.WatsonxRequestError("HTTP 401: bad key")
+
+    monkeypatch.setattr(wx_module, "generate", boom)
+
+    # Stub the anthropic SDK to a working client.
+    class _StubMsg:
+        type = "text"
+        text = "Claude says: imports concentrate on neighbouring countries."
+
+    class _StubResponse:
+        content = [_StubMsg()]
+
+    class _StubClient:
+        def __init__(self, **_kw):
+            self.messages = self
+        def create(self, **_kw):
+            return _StubResponse()
+
+    import sys, types
+    fake_anthropic = types.ModuleType("anthropic")
+    fake_anthropic.Anthropic = _StubClient  # type: ignore[attr-defined]
+    monkeypatch.setitem(sys.modules, "anthropic", fake_anthropic)
+
+    sim = _sim()
+    out = explain(sim, focus_iso3=None)
+    assert out["source"] == "anthropic"
+    assert "Claude says" in out["text"]
+    assert out["error_chain"][0]["provider"] == "watsonx"
+
+
+def test_watsonx_not_configured_does_not_appear_in_error_chain(monkeypatch):
+    """Unconfigured providers are quietly skipped, not surfaced as errors."""
+    _clear_provider_env(monkeypatch)
+    monkeypatch.setenv("WATSONX_APIKEY", "fake")  # missing project id keeps it disabled
     sim = _sim()
     out = explain(sim, focus_iso3=None)
     assert out["source"] == "template"
+    assert "error_chain" not in out
+
+
+def test_happy_path_omits_error_chain(monkeypatch):
+    _clear_provider_env(monkeypatch)
+    monkeypatch.setenv("WATSONX_APIKEY", "fake")
+    monkeypatch.setenv("WATSONX_PROJECT_ID", "fake-project")
+
+    from app import watsonx as wx_module
+
+    monkeypatch.setattr(wx_module, "generate", lambda system, user, max_tokens=400: "Granite output.")
+
+    sim = _sim()
+    out = explain(sim, focus_iso3=None)
+    assert out["source"] == "watsonx"
+    assert "error_chain" not in out
