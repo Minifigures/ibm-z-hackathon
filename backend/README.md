@@ -43,6 +43,15 @@ app/
     diseases.json    presets for COVID-19, Flu, Mpox, Pathogen X
 ```
 
+## Tests
+
+```bash
+pip install -r requirements-dev.txt
+pytest -v
+```
+
+35 tests covering mobility math (haversine, gravity decay, mass conservation, intervention multipliers), the SEIR + Monte Carlo simulator (schema, ordered quantiles, intervention efficacy, isolation under full travel restriction, no-negatives invariant), the FastAPI endpoints (health, countries, presets, simulate happy/sad paths, request validation), and the explainer (templated fallback paths).
+
 ## Performance
 
 Default config (70 regions, 200 Monte Carlo runs, 30-day horizon, 4 sub-steps/day) finishes in well under 1 second on a laptop. The integrator is fully vectorized over runs, so the 1000-run stretch target only roughly 5x's the cost.

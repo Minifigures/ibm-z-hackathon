@@ -73,6 +73,17 @@ npm run dev
 
 Open <http://localhost:3000>.
 
+## Tests
+
+```bash
+# Backend (35 tests)
+cd backend && pip install -r requirements-dev.txt && pytest -v
+
+# Frontend (12 tests)
+cd frontend && npm test
+cd frontend && npm run typecheck
+```
+
 ## Quick smoke test
 
 ```bash

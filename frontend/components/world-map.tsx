@@ -7,15 +7,24 @@ import type { Country, RegionResult, SpreadArc } from "@/lib/api";
 
 const BASEMAP: StyleSpecification = {
   version: 8,
+  glyphs: "https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf",
   sources: {
     carto: {
       type: "raster",
-      tiles: ["https://basemaps.cartocdn.com/dark-all/{z}/{x}/{y}.png"],
+      tiles: [
+        "https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png",
+        "https://b.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png",
+        "https://c.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png",
+        "https://d.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png",
+      ],
       tileSize: 256,
-      attribution: "© OpenStreetMap contributors © CARTO",
+      attribution: "(c) OpenStreetMap contributors, (c) CARTO",
     },
   },
-  layers: [{ id: "carto", type: "raster", source: "carto" }],
+  layers: [
+    { id: "background", type: "background", paint: { "background-color": "#0a0e14" } },
+    { id: "carto", type: "raster", source: "carto" },
+  ],
 };
 
 type Props = {

@@ -30,6 +30,16 @@ lib/
   api.ts               Typed fetch client for the FastAPI service
 ```
 
+## Tests
+
+```bash
+npm test          # one-shot
+npm run test:watch
+npm run typecheck
+```
+
+Vitest + jsdom + Testing Library, with 12 component tests across the slider row, hub list, and explanation panel.
+
 ## Slider redraw target
 
 The PRD targets sub-second slider-to-map redraw. The frontend debounces slider changes by 120ms then issues a single `/simulate` POST. With the default 200 Monte Carlo runs over ~70 regions the round-trip lands in ~250-400ms on a laptop.
