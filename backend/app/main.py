@@ -14,10 +14,14 @@ import json
 from pathlib import Path
 from typing import Any, Literal
 
+from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
+load_dotenv()
+
+from .disease_lookup import lookup as disease_lookup
 from .explain import explain
 from .mobility import load_countries
 from .simulate import SimParams, run
@@ -56,6 +60,10 @@ class SimulateRequest(BaseModel):
 class ExplainRequest(BaseModel):
     simulation: dict[str, Any]
     focus_iso3: str | None = None
+
+
+class DiseaseLookupRequest(BaseModel):
+    name: str = Field(..., min_length=1, max_length=120)
 
 
 @app.get("/health")
@@ -110,3 +118,14 @@ def simulate(req: SimulateRequest) -> dict[str, Any]:
 @app.post("/explain")
 def explain_endpoint(req: ExplainRequest) -> dict[str, str]:
     return explain(req.simulation, focus_iso3=req.focus_iso3)
+
+
+@app.post("/disease-params")
+def disease_params_endpoint(req: DiseaseLookupRequest) -> dict[str, Any]:
+    result = disease_lookup(req.name)
+    status = result.get("status")
+    if status == "unconfigured":
+        raise HTTPException(status_code=503, detail=result)
+    if status == "rejected":
+        raise HTTPException(status_code=422, detail=result)
+    return result

@@ -34,7 +34,7 @@ export function ExplainPanel({ text, source, loading, onRequest, focusName }: Pr
       </div>
       {source ? (
         <div className="px-3 pb-2 text-[10px] text-slate-500">
-          source: {source === "anthropic" ? "Claude Haiku" : "templated fallback"}
+          source: {source === "watsonx" ? "watsonx.ai Granite 3.3" : "templated fallback"}
         </div>
       ) : null}
     </div>

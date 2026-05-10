@@ -6,9 +6,11 @@ import { ForecastChart } from "@/components/forecast-chart";
 import { ExplainPanel } from "@/components/explain-panel";
 import { HubList } from "@/components/hub-list";
 import { SliderRow } from "@/components/slider-row";
+import { DiseaseSearch } from "@/components/disease-search";
 import {
   api,
   type Country,
+  type DiseaseParams,
   type DiseasePreset,
   type SimulateRequest,
   type SimulationResult,
@@ -87,6 +89,16 @@ export default function Page() {
     });
   };
 
+  const onAutoFill = (p: DiseaseParams) => {
+    update({
+      disease_id: "pathogenx",
+      r0: p.r0,
+      incubation_days: p.incubation_days,
+      infectious_days: p.infectious_days,
+      cfr_pct: p.cfr_pct,
+    });
+  };
+
   const onExplain = async () => {
     if (!result) return;
     setExplainLoading(true);
@@ -135,6 +147,9 @@ export default function Page() {
       <aside className="row-start-2 overflow-y-auto border-r border-ink-600 bg-ink-800 p-4 space-y-4">
         <section>
           <h2 className="text-xs uppercase tracking-wider text-slate-400 mb-2">Scenario</h2>
+          <div className="mb-3">
+            <DiseaseSearch onApply={onAutoFill} />
+          </div>
           <div className="grid grid-cols-2 gap-2 mb-3">
             {Object.values(presets).map((p) => (
               <button
