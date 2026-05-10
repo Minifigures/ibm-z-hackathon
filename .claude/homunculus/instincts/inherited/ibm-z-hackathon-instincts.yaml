@@ -1,0 +1,390 @@
+# Instincts generated from https://github.com/Minifigures/ibm-z-hackathon
+# Generated: 2026-05-10T09:39:36.328Z
+# Version: 2.0
+# NOTE: This file supplements (does not replace) any existing curated instincts.
+# High-confidence manually curated instincts should be preserved alongside these.
+
+---
+id: ibm-z-hackathon-commit-conventional
+trigger: "when writing a commit message"
+confidence: 0.85
+domain: git
+source: repo-analysis
+source_repo: https://github.com/Minifigures/ibm-z-hackathon
+---
+
+# Ibm Z Hackathon Commit Conventional
+
+## Action
+
+Use conventional commit format with prefixes: feat, docs
+
+## Evidence
+
+- 3 commits analyzed
+- Detected conventional commit pattern
+- Examples: feat(backend): real-data mobility + multi-disease validation + research-grade ensemble, docs: 17 research papers + integration playbook + research-papers synthesis
+
+---
+id: ibm-z-hackathon-commit-length
+trigger: "when writing a commit message"
+confidence: 0.6
+domain: git
+source: repo-analysis
+source_repo: https://github.com/Minifigures/ibm-z-hackathon
+---
+
+# Ibm Z Hackathon Commit Length
+
+## Action
+
+Write moderate-length commit messages (~83 characters)
+
+## Evidence
+
+- Average commit message length: 83 chars
+- Based on 3 commits
+
+---
+id: ibm-z-hackathon-naming-files
+trigger: "when creating a new file"
+confidence: 0.8
+domain: code-style
+source: repo-analysis
+source_repo: https://github.com/Minifigures/ibm-z-hackathon
+---
+
+# Ibm Z Hackathon Naming Files
+
+## Action
+
+Use snake_case naming convention
+
+## Evidence
+
+- Analyzed file naming patterns in repository
+- Dominant pattern: snake_case
+
+---
+id: ibm-z-hackathon-import-alias
+trigger: "when importing modules"
+confidence: 0.85
+domain: code-style
+source: repo-analysis
+source_repo: https://github.com/Minifigures/ibm-z-hackathon
+---
+
+# Ibm Z Hackathon Import Alias
+
+## Action
+
+Use path aliases (@/, ~/) instead of relative imports
+
+## Evidence
+
+- Import analysis shows alias pattern
+- Example: import { x } from '@/lib/x'
+
+---
+id: ibm-z-hackathon-export-style
+trigger: "when exporting from a module"
+confidence: 0.7
+domain: code-style
+source: repo-analysis
+source_repo: https://github.com/Minifigures/ibm-z-hackathon
+---
+
+# Ibm Z Hackathon Export Style
+
+## Action
+
+Prefer named exports
+
+## Evidence
+
+- Export pattern analysis
+- Dominant style: named
+
+---
+id: ibm-z-hackathon-workflow-feature-development-with-tests-and-docs
+trigger: "when doing feature development with tests and docs"
+confidence: 0.6
+domain: workflow
+source: repo-analysis
+source_repo: https://github.com/Minifigures/ibm-z-hackathon
+---
+
+# Ibm Z Hackathon Workflow Feature Development With Tests And Docs
+
+## Action
+
+Follow the feature-development-with-tests-and-docs workflow:
+1. Implement backend logic and/or data ingestion scripts (e.g., add new Python modules, update data JSONs, scripts in backend/scripts/).
+2. Update or add new frontend components and supporting libraries (e.g., new .tsx components, update lib/api.ts).
+3. Add or update tests for new features (e.g., backend/tests/, frontend/tests/).
+4. Update documentation and/or deployment instructions (e.g., README.md, DEPLOY.md).
+
+## Evidence
+
+- Workflow detected from commit patterns
+- Frequency: ~2x per month
+- Files: backend/app/*.py, backend/app/data/*.json, backend/scripts/*.py
+
+---
+id: ibm-z-hackathon-workflow-research-paper-integration-and-documentation
+trigger: "when doing research paper integration and documentation"
+confidence: 0.6
+domain: workflow
+source: repo-analysis
+source_repo: https://github.com/Minifigures/ibm-z-hackathon
+---
+
+# Ibm Z Hackathon Workflow Research Paper Integration And Documentation
+
+## Action
+
+Follow the research-paper-integration-and-documentation workflow:
+1. Add new PDF files for each research paper to docs/.
+2. Update or create mapping files (e.g., RESEARCH_PAPERS.md, INTEGRATION_PLAYBOOK.md) to link papers to features.
+3. Reference new papers in code or documentation as needed.
+
+## Evidence
+
+- Workflow detected from commit patterns
+- Frequency: ~2x per month
+- Files: docs/*.pdf, docs/RESEARCH_PAPERS.md, docs/INTEGRATION_PLAYBOOK.md
+
+---
+id: ibm-z-hackathon-instinct-naming-files
+trigger: "When creating or renaming a Python file"
+confidence: 0.9
+domain: code-style
+source: repo-analysis
+source_repo: Minifigures/ibm-z-hackathon
+---
+
+# Ibm Z Hackathon Instinct Naming Files
+
+## Action
+
+Use snake_case for file names
+
+## Evidence
+
+- Pattern in folderStructure and namingConventions: files=snake_case
+
+---
+id: ibm-z-hackathon-instinct-naming-functions
+trigger: "When defining a new function in Python"
+confidence: 0.8
+domain: code-style
+source: repo-analysis
+source_repo: Minifigures/ibm-z-hackathon
+---
+
+# Ibm Z Hackathon Instinct Naming Functions
+
+## Action
+
+Use camelCase for function names
+
+## Evidence
+
+- Pattern in namingConventions: functions=camelCase
+
+---
+id: ibm-z-hackathon-instinct-naming-classes
+trigger: "When defining a new class in Python"
+confidence: 0.9
+domain: code-style
+source: repo-analysis
+source_repo: Minifigures/ibm-z-hackathon
+---
+
+# Ibm Z Hackathon Instinct Naming Classes
+
+## Action
+
+Use PascalCase for class names
+
+## Evidence
+
+- Pattern in namingConventions: classes=PascalCase
+
+---
+id: ibm-z-hackathon-instinct-naming-constants
+trigger: "When defining a constant in Python"
+confidence: 0.9
+domain: code-style
+source: repo-analysis
+source_repo: Minifigures/ibm-z-hackathon
+---
+
+# Ibm Z Hackathon Instinct Naming Constants
+
+## Action
+
+Use SCREAMING_SNAKE_CASE for constant names
+
+## Evidence
+
+- Pattern in namingConventions: constants=SCREAMING_SNAKE_CASE
+
+---
+id: ibm-z-hackathon-instinct-import-alias
+trigger: "When importing modules in Python"
+confidence: 0.8
+domain: code-style
+source: repo-analysis
+source_repo: Minifigures/ibm-z-hackathon
+---
+
+# Ibm Z Hackathon Instinct Import Alias
+
+## Action
+
+Use import aliasing style
+
+## Evidence
+
+- Pattern in codeStyle: importStyle=alias
+
+---
+id: ibm-z-hackathon-instinct-export-named
+trigger: "When exporting modules or functions"
+confidence: 0.8
+domain: code-style
+source: repo-analysis
+source_repo: Minifigures/ibm-z-hackathon
+---
+
+# Ibm Z Hackathon Instinct Export Named
+
+## Action
+
+Use named exports
+
+## Evidence
+
+- Pattern in codeStyle: exportStyle=named
+
+---
+id: ibm-z-hackathon-instinct-testing-backend
+trigger: "When adding or updating backend features"
+confidence: 0.9
+domain: testing
+source: repo-analysis
+source_repo: Minifigures/ibm-z-hackathon
+---
+
+# Ibm Z Hackathon Instinct Testing Backend
+
+## Action
+
+Add or update tests in backend/tests/*.py
+
+## Evidence
+
+- feature-development-with-tests-and-docs workflow
+- Pattern in files: backend/tests/*.py
+
+---
+id: ibm-z-hackathon-instinct-testing-frontend
+trigger: "When adding or updating frontend features"
+confidence: 0.9
+domain: testing
+source: repo-analysis
+source_repo: Minifigures/ibm-z-hackathon
+---
+
+# Ibm Z Hackathon Instinct Testing Frontend
+
+## Action
+
+Add or update tests in frontend/tests/*.test.ts
+
+## Evidence
+
+- feature-development-with-tests-and-docs workflow
+- Pattern in files: frontend/tests/*.test.ts
+
+---
+id: ibm-z-hackathon-instinct-git-conventional-commits
+trigger: "When writing a commit message"
+confidence: 0.9
+domain: git
+source: repo-analysis
+source_repo: Minifigures/ibm-z-hackathon
+---
+
+# Ibm Z Hackathon Instinct Git Conventional Commits
+
+## Action
+
+Use conventional commit format with prefixes like 'feat' or 'docs'
+
+## Evidence
+
+- Pattern in commits: type=conventional, prefixes=['feat','docs']
+- Examples: 'feat(backend): ...', 'docs: ...'
+
+---
+id: ibm-z-hackathon-instinct-git-commit-length
+trigger: "When writing a commit message"
+confidence: 0.8
+domain: git
+source: repo-analysis
+source_repo: Minifigures/ibm-z-hackathon
+---
+
+# Ibm Z Hackathon Instinct Git Commit Length
+
+## Action
+
+Write descriptive commit messages (average length ~80 chars)
+
+## Evidence
+
+- Pattern in commits: averageLength=83
+- Examples: 'feat(backend): real-data mobility + ...'
+
+---
+id: ibm-z-hackathon-instinct-workflow-feature-dev
+trigger: "When adding a significant new capability (e.g., new modeling, visualization, or API endpoint)"
+confidence: 0.95
+domain: workflow
+source: repo-analysis
+source_repo: Minifigures/ibm-z-hackathon
+---
+
+# Ibm Z Hackathon Instinct Workflow Feature Dev
+
+## Action
+
+Follow the workflow: implement backend logic/scripts, update frontend components/libraries, add/update tests, update documentation/deployment instructions
+
+## Evidence
+
+- feature-development-with-tests-and-docs workflow
+- Pattern in commit sequences and files involved
+
+---
+id: ibm-z-hackathon-instinct-workflow-research-paper
+trigger: "When documenting research basis or adding new literature"
+confidence: 0.9
+domain: workflow
+source: repo-analysis
+source_repo: Minifigures/ibm-z-hackathon
+---
+
+# Ibm Z Hackathon Instinct Workflow Research Paper
+
+## Action
+
+Add PDF to docs/, update RESEARCH_PAPERS.md and INTEGRATION_PLAYBOOK.md, reference new papers as needed
+
+## Evidence
+
+- research-paper-integration-and-documentation workflow
+- Pattern in commit sequences and files involved
+
