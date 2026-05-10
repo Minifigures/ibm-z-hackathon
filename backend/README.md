@@ -22,13 +22,26 @@ API: <http://localhost:8000/docs>
 - `POST /simulate`  run the full pipeline; returns per-region quantile bands, top hubs, spread arcs
 - `POST /explain`  LLM narrative for the simulation result
 
-## Anthropic key (optional)
+## Provider chain for `/explain` (all optional)
 
-Set `ANTHROPIC_API_KEY` to enable the Claude-Haiku explainer. Without it, `/explain` returns a deterministic templated paragraph so the demo never breaks.
+The endpoint walks a three-step provider chain. Each step is gated on env vars and the chain falls through cleanly when none are set, so the demo never breaks.
+
+1. **IBM watsonx.ai Granite**, used when `WATSONX_APIKEY` and `WATSONX_PROJECT_ID` are both set.
+2. **Anthropic Claude Haiku**, used when `ANTHROPIC_API_KEY` is set and the SDK is installed.
+3. **Templated fallback**: deterministic paragraph grounded in the simulator output, always available.
 
 ```bash
+# IBM watsonx.ai (preferred for the IBM Z hackathon track)
+export WATSONX_APIKEY=...               # IBM Cloud API key (cloud.ibm.com/iam/apikeys)
+export WATSONX_PROJECT_ID=...           # watsonx.ai project id
+export WATSONX_URL=https://us-south.ml.cloud.ibm.com   # optional, default shown
+export WATSONX_MODEL_ID=ibm/granite-3-3-8b-instruct    # optional, default shown
+
+# Anthropic fallback
 export ANTHROPIC_API_KEY=sk-ant-...
 ```
+
+The response always includes a `source` field (`watsonx` / `anthropic` / `template`) so the frontend can render a provenance pill.
 
 ## File map
 
