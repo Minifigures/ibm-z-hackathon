@@ -335,78 +335,76 @@ export default function Page() {
         </section>
       </aside>
 
-      <section className="row-start-2 relative">
-        <div className="absolute inset-0">
-          {mapView === "geo" ? (
-            <WorldMap
-              countries={countries}
-              regions={result?.regions ?? []}
-              arcs={result?.spread_arcs ?? []}
-              startIso3={req.start_iso3}
-              selectedIso3={selectedIso3}
-              onSelect={setSelectedIso3}
-            />
-          ) : (
-            <PolarMap
-              countries={countries}
-              regions={result?.regions ?? []}
-              arcs={result?.spread_arcs ?? []}
-              startIso3={req.start_iso3}
-              selectedIso3={selectedIso3}
-              onSelect={setSelectedIso3}
-            />
-          )}
-        </div>
-
-        <div className="pointer-events-none absolute right-3 top-3 flex gap-1 rounded border border-ink-600 bg-ink-800/90 p-0.5 text-[11px] backdrop-blur">
-          <button
-            onClick={() => setMapView("geo")}
-            className={`pointer-events-auto rounded px-2 py-1 ${
-              mapView === "geo" ? "bg-accent/20 text-accent" : "text-slate-300 hover:text-slate-100"
-            }`}
-          >
-            Geo
-          </button>
-          <button
-            onClick={() => setMapView("polar")}
-            className={`pointer-events-auto rounded px-2 py-1 ${
-              mapView === "polar" ? "bg-accent/20 text-accent" : "text-slate-300 hover:text-slate-100"
-            }`}
-            title="Effective-distance polar projection (Brockmann & Helbing 2013)"
-          >
-            Polar (d_eff)
-          </button>
-        </div>
-
-        <div className="absolute bottom-0 left-0 right-0 grid grid-cols-3 gap-3 p-3 pointer-events-none">
-          <div className="pointer-events-auto">
-            <HubList
-              title="Top import hubs (median expected cases)"
-              rows={result?.top_imports ?? []}
-              valueKey="expected_cases"
-              onSelect={setSelectedIso3}
-            />
-          </div>
-          <div className="pointer-events-auto">
-            {focusRegion ? (
-              <ForecastChart
-                title={`Forecast · ${focusRegion.name}`}
-                quantiles={focusRegion.quantiles}
-                predictedArrivalDay={focusRegion.predicted_arrival_day}
-                effectiveDistance={focusRegion.effective_distance_from_seed}
-                variantsTerminalP50={focusRegion.variants_terminal_p50}
-                variantMeta={result?.model_variants}
-                posteriorQuantiles={showPosteriorOnFocus ? nowcastResult!.posterior_quantiles : null}
-                observations={showPosteriorOnFocus ? nowcastResult!.observations : null}
+      <section className="row-start-2 grid grid-rows-[1fr_minmax(220px,32%)] overflow-hidden">
+        <div className="relative overflow-hidden">
+          <div className="absolute inset-0">
+            {mapView === "geo" ? (
+              <WorldMap
+                countries={countries}
+                regions={result?.regions ?? []}
+                arcs={result?.spread_arcs ?? []}
+                startIso3={req.start_iso3}
+                selectedIso3={selectedIso3}
+                onSelect={setSelectedIso3}
               />
             ) : (
-              <div className="rounded-md border border-ink-600 bg-ink-800 p-3 text-xs text-slate-500">
-                Click a country on the map (or in the hub list) to see its forecast curve with
-                50% / 95% intervals.
-              </div>
+              <PolarMap
+                countries={countries}
+                regions={result?.regions ?? []}
+                arcs={result?.spread_arcs ?? []}
+                startIso3={req.start_iso3}
+                selectedIso3={selectedIso3}
+                onSelect={setSelectedIso3}
+              />
             )}
           </div>
-          <div className="pointer-events-auto space-y-2">
+
+          <div className="absolute right-3 top-3 z-10 flex gap-1 rounded border border-ink-600 bg-ink-800/90 p-0.5 text-[11px] backdrop-blur">
+            <button
+              onClick={() => setMapView("geo")}
+              className={`rounded px-2 py-1 ${
+                mapView === "geo" ? "bg-accent/20 text-accent" : "text-slate-300 hover:text-slate-100"
+              }`}
+            >
+              Geo
+            </button>
+            <button
+              onClick={() => setMapView("polar")}
+              className={`rounded px-2 py-1 ${
+                mapView === "polar" ? "bg-accent/20 text-accent" : "text-slate-300 hover:text-slate-100"
+              }`}
+              title="Effective-distance polar projection (Brockmann & Helbing 2013)"
+            >
+              Polar (d_eff)
+            </button>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-3 gap-3 overflow-y-auto border-t border-ink-600 bg-ink-900 p-3">
+          <HubList
+            title="Top import hubs (median expected cases)"
+            rows={result?.top_imports ?? []}
+            valueKey="expected_cases"
+            onSelect={setSelectedIso3}
+          />
+          {focusRegion ? (
+            <ForecastChart
+              title={`Forecast · ${focusRegion.name}`}
+              quantiles={focusRegion.quantiles}
+              predictedArrivalDay={focusRegion.predicted_arrival_day}
+              effectiveDistance={focusRegion.effective_distance_from_seed}
+              variantsTerminalP50={focusRegion.variants_terminal_p50}
+              variantMeta={result?.model_variants}
+              posteriorQuantiles={showPosteriorOnFocus ? nowcastResult!.posterior_quantiles : null}
+              observations={showPosteriorOnFocus ? nowcastResult!.observations : null}
+            />
+          ) : (
+            <div className="rounded-md border border-ink-600 bg-ink-800 p-3 text-xs text-slate-500">
+              Click a country on the map (or in the hub list) to see its forecast curve with
+              50% / 95% intervals.
+            </div>
+          )}
+          <div className="space-y-2">
             <ExplainPanel
               text={explainText}
               source={explainSource}
