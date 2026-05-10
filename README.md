@@ -2,7 +2,7 @@
 
 > Pick a disease and a starting city, drag a few sliders, watch a world map show where the outbreak most likely spreads next, with calibrated uncertainty and an AI-generated explanation a public-health analyst could actually use.
 
-Built for the IBM Z hackathon. See [`docs/PRD.md`](docs/PRD.md) for the full product spec.
+Built for the IBM Z hackathon. See [`docs/PRD.md`](docs/PRD.md) for the full product spec and [`docs/TRACKS.md`](docs/TRACKS.md) for the track-targeting matrix and current coverage.
 
 ## What this is
 
