@@ -1,0 +1,626 @@
+# Instincts generated from https://github.com/Minifigures/ibm-z-hackathon
+# Generated: 2026-05-10T11:34:25.431Z
+# Version: 2.0
+# NOTE: This file supplements (does not replace) any existing curated instincts.
+# High-confidence manually curated instincts should be preserved alongside these.
+
+---
+id: ibm-z-hackathon-commit-conventional
+trigger: "when writing a commit message"
+confidence: 0.85
+domain: git
+source: repo-analysis
+source_repo: https://github.com/Minifigures/ibm-z-hackathon
+---
+
+# Ibm Z Hackathon Commit Conventional
+
+## Action
+
+Use conventional commit format with prefixes: feat, docs, fix, merge
+
+## Evidence
+
+- 13 commits analyzed
+- Detected conventional commit pattern
+- Examples: feat(backend): real-data mobility + multi-disease validation + research-grade ensemble, docs: 17 research papers + integration playbook + research-papers synthesis
+
+---
+id: ibm-z-hackathon-commit-length
+trigger: "when writing a commit message"
+confidence: 0.6
+domain: git
+source: repo-analysis
+source_repo: https://github.com/Minifigures/ibm-z-hackathon
+---
+
+# Ibm Z Hackathon Commit Length
+
+## Action
+
+Write moderate-length commit messages (~75 characters)
+
+## Evidence
+
+- Average commit message length: 75 chars
+- Based on 13 commits
+
+---
+id: ibm-z-hackathon-naming-files
+trigger: "when creating a new file"
+confidence: 0.8
+domain: code-style
+source: repo-analysis
+source_repo: https://github.com/Minifigures/ibm-z-hackathon
+---
+
+# Ibm Z Hackathon Naming Files
+
+## Action
+
+Use snake_case naming convention
+
+## Evidence
+
+- Analyzed file naming patterns in repository
+- Dominant pattern: snake_case
+
+---
+id: ibm-z-hackathon-import-alias
+trigger: "when importing modules"
+confidence: 0.85
+domain: code-style
+source: repo-analysis
+source_repo: https://github.com/Minifigures/ibm-z-hackathon
+---
+
+# Ibm Z Hackathon Import Alias
+
+## Action
+
+Use path aliases (@/, ~/) instead of relative imports
+
+## Evidence
+
+- Import analysis shows alias pattern
+- Example: import { x } from '@/lib/x'
+
+---
+id: ibm-z-hackathon-export-style
+trigger: "when exporting from a module"
+confidence: 0.7
+domain: code-style
+source: repo-analysis
+source_repo: https://github.com/Minifigures/ibm-z-hackathon
+---
+
+# Ibm Z Hackathon Export Style
+
+## Action
+
+Prefer named exports
+
+## Evidence
+
+- Export pattern analysis
+- Dominant style: named
+
+---
+id: ibm-z-hackathon-test-framework
+trigger: "when writing tests"
+confidence: 0.9
+domain: testing
+source: repo-analysis
+source_repo: https://github.com/Minifigures/ibm-z-hackathon
+---
+
+# Ibm Z Hackathon Test Framework
+
+## Action
+
+Use vitest as the test framework
+
+## Evidence
+
+- Test framework detected: vitest
+- File pattern: *.test.tsx
+
+---
+id: ibm-z-hackathon-test-naming
+trigger: "when creating a test file"
+confidence: 0.85
+domain: testing
+source: repo-analysis
+source_repo: https://github.com/Minifigures/ibm-z-hackathon
+---
+
+# Ibm Z Hackathon Test Naming
+
+## Action
+
+Name test files using the pattern: *.test.tsx
+
+## Evidence
+
+- File pattern: *.test.tsx
+- Consistent across test files
+
+---
+id: ibm-z-hackathon-test-mocking
+trigger: "when mocking dependencies in tests"
+confidence: 0.75
+domain: testing
+source: repo-analysis
+source_repo: https://github.com/Minifigures/ibm-z-hackathon
+---
+
+# Ibm Z Hackathon Test Mocking
+
+## Action
+
+Use vi.mock for mocking
+
+## Evidence
+
+- Mocking pattern detected: vi.mock
+- Consistent across test files
+
+---
+id: ibm-z-hackathon-test-types
+trigger: "when planning tests for a feature"
+confidence: 0.7
+domain: testing
+source: repo-analysis
+source_repo: https://github.com/Minifigures/ibm-z-hackathon
+---
+
+# Ibm Z Hackathon Test Types
+
+## Action
+
+Write unit, integration tests to match project standards
+
+## Evidence
+
+- Test types detected: unit, integration
+- Coverage config: no
+
+---
+id: ibm-z-hackathon-workflow-feature-development
+trigger: "when implementing a new feature"
+confidence: 0.9
+domain: workflow
+source: repo-analysis
+source_repo: https://github.com/Minifigures/ibm-z-hackathon
+---
+
+# Ibm Z Hackathon Workflow Feature Development
+
+## Action
+
+Follow the feature-development workflow:
+1. Add feature implementation
+2. Add tests for feature
+3. Update documentation
+
+## Evidence
+
+- Workflow detected from commit patterns
+- Frequency: ~21x per month
+- Files: frontend/app/*, frontend/components/*, frontend/lib/*
+
+---
+id: ibm-z-hackathon-workflow-add-or-update-disease-preset-and-validation
+trigger: "when doing add or update disease preset and validation"
+confidence: 0.6
+domain: workflow
+source: repo-analysis
+source_repo: https://github.com/Minifigures/ibm-z-hackathon
+---
+
+# Ibm Z Hackathon Workflow Add Or Update Disease Preset And Validation
+
+## Action
+
+Follow the add-or-update-disease-preset-and-validation workflow:
+1. Edit or add entry in backend/app/data/diseases.json with new disease parameters.
+2. Update backend/app/data/countries.json if new origin countries are needed.
+3. Update backend/app/data/disease_corpus.json for LLM lookup and aliases.
+4. Modify backend/app/disease_lookup.py to handle new disease or origin logic.
+5. Add or update validation logic in backend/backtest/validate.py and backend/backtest/validate_ensemble.py.
+6. Update backend/app/main.py to expose new disease in API endpoints.
+7. Update or add tests in backend/tests/test_endpoints.py and/or backend/tests/test_disease_lookup.py.
+
+## Evidence
+
+- Workflow detected from commit patterns
+- Frequency: ~2x per month
+- Files: backend/app/data/diseases.json, backend/app/data/countries.json, backend/app/data/disease_corpus.json
+
+---
+id: ibm-z-hackathon-workflow-add-or-enhance-llm-disease-lookup-feature
+trigger: "when doing add or enhance llm disease lookup feature"
+confidence: 0.6
+domain: workflow
+source: repo-analysis
+source_repo: https://github.com/Minifigures/ibm-z-hackathon
+---
+
+# Ibm Z Hackathon Workflow Add Or Enhance Llm Disease Lookup Feature
+
+## Action
+
+Follow the add-or-enhance-llm-disease-lookup-feature workflow:
+1. Edit backend/app/disease_lookup.py to adjust LLM prompt, validation, or logic.
+2. Update backend/app/data/disease_corpus.json with new diseases or aliases.
+3. Edit backend/app/data/countries.json if new origin countries are supported.
+4. Update frontend/components/disease-search.tsx and frontend/lib/api.ts to reflect new API contract or UI logic.
+5. Update or add tests in backend/tests/test_disease_lookup.py and frontend/tests/disease-search.test.tsx.
+
+## Evidence
+
+- Workflow detected from commit patterns
+- Frequency: ~2x per month
+- Files: backend/app/disease_lookup.py, backend/app/data/disease_corpus.json, backend/app/data/countries.json
+
+---
+id: ibm-z-hackathon-workflow-frontend-feature-or-ui-panel-addition
+trigger: "when doing frontend feature or ui panel addition"
+confidence: 0.6
+domain: workflow
+source: repo-analysis
+source_repo: https://github.com/Minifigures/ibm-z-hackathon
+---
+
+# Ibm Z Hackathon Workflow Frontend Feature Or Ui Panel Addition
+
+## Action
+
+Follow the frontend-feature-or-ui-panel-addition workflow:
+1. Create or update frontend/components/*.tsx for the new panel or visualization.
+2. Update frontend/app/page.tsx to integrate the new component or adjust layout.
+3. Modify frontend/lib/api.ts to support new API data or types.
+4. Add or update tests in frontend/tests/*.test.tsx to cover the new feature.
+
+## Evidence
+
+- Workflow detected from commit patterns
+- Frequency: ~2x per month
+- Files: frontend/components/*.tsx, frontend/app/page.tsx, frontend/lib/api.ts
+
+---
+id: ibm-z-hackathon-workflow-merge-feature-branch-with-conflict-resolution
+trigger: "when doing merge feature branch with conflict resolution"
+confidence: 0.6
+domain: workflow
+source: repo-analysis
+source_repo: https://github.com/Minifigures/ibm-z-hackathon
+---
+
+# Ibm Z Hackathon Workflow Merge Feature Branch With Conflict Resolution
+
+## Action
+
+Follow the merge-feature-branch-with-conflict-resolution workflow:
+1. Merge remote-tracking branch into target branch.
+2. Resolve conflicts in overlapping files (e.g., backend/app/main.py, backend/app/data/diseases.json, frontend/lib/api.ts).
+3. Integrate or reconcile test changes (backend/tests/test_endpoints.py, frontend/tests/*.test.tsx).
+4. Verify all tests pass after merge.
+
+## Evidence
+
+- Workflow detected from commit patterns
+- Frequency: ~2x per month
+- Files: backend/app/main.py, backend/app/data/diseases.json, backend/app/data/disease_corpus.json
+
+---
+id: ibm-z-hackathon-instinct-file-naming
+trigger: "When creating or renaming a file in the codebase"
+confidence: 0.85
+domain: code-style
+source: repo-analysis
+source_repo: Minifigures/ibm-z-hackathon
+---
+
+# Ibm Z Hackathon Instinct File Naming
+
+## Action
+
+Use snake_case for file names
+
+## Evidence
+
+- Pattern in codeStyle.namingConventions.files: snake_case
+
+---
+id: ibm-z-hackathon-instinct-function-naming
+trigger: "When defining a new function"
+confidence: 0.8
+domain: code-style
+source: repo-analysis
+source_repo: Minifigures/ibm-z-hackathon
+---
+
+# Ibm Z Hackathon Instinct Function Naming
+
+## Action
+
+Use camelCase for function names
+
+## Evidence
+
+- Pattern in codeStyle.namingConventions.functions: camelCase
+
+---
+id: ibm-z-hackathon-instinct-class-naming
+trigger: "When defining a new class"
+confidence: 0.8
+domain: code-style
+source: repo-analysis
+source_repo: Minifigures/ibm-z-hackathon
+---
+
+# Ibm Z Hackathon Instinct Class Naming
+
+## Action
+
+Use PascalCase for class names
+
+## Evidence
+
+- Pattern in codeStyle.namingConventions.classes: PascalCase
+
+---
+id: ibm-z-hackathon-instinct-constant-naming
+trigger: "When defining a constant"
+confidence: 0.8
+domain: code-style
+source: repo-analysis
+source_repo: Minifigures/ibm-z-hackathon
+---
+
+# Ibm Z Hackathon Instinct Constant Naming
+
+## Action
+
+Use SCREAMING_SNAKE_CASE for constant names
+
+## Evidence
+
+- Pattern in codeStyle.namingConventions.constants: SCREAMING_SNAKE_CASE
+
+---
+id: ibm-z-hackathon-instinct-import-alias
+trigger: "When importing modules"
+confidence: 0.75
+domain: code-style
+source: repo-analysis
+source_repo: Minifigures/ibm-z-hackathon
+---
+
+# Ibm Z Hackathon Instinct Import Alias
+
+## Action
+
+Use alias import style
+
+## Evidence
+
+- Pattern in codeStyle.importStyle: alias
+
+---
+id: ibm-z-hackathon-instinct-export-named
+trigger: "When exporting modules or functions"
+confidence: 0.75
+domain: code-style
+source: repo-analysis
+source_repo: Minifigures/ibm-z-hackathon
+---
+
+# Ibm Z Hackathon Instinct Export Named
+
+## Action
+
+Use named exports
+
+## Evidence
+
+- Pattern in codeStyle.exportStyle: named
+
+---
+id: ibm-z-hackathon-instinct-test-file-pattern
+trigger: "When creating a new test file for frontend code"
+confidence: 0.9
+domain: testing
+source: repo-analysis
+source_repo: Minifigures/ibm-z-hackathon
+---
+
+# Ibm Z Hackathon Instinct Test File Pattern
+
+## Action
+
+Name the file with the pattern *.test.tsx
+
+## Evidence
+
+- Pattern in testing.filePattern: *.test.tsx
+- Seen in files: frontend/tests/*.test.tsx
+
+---
+id: ibm-z-hackathon-instinct-test-framework-vitest
+trigger: "When writing frontend tests"
+confidence: 0.85
+domain: testing
+source: repo-analysis
+source_repo: Minifigures/ibm-z-hackathon
+---
+
+# Ibm Z Hackathon Instinct Test Framework Vitest
+
+## Action
+
+Use the vitest testing framework
+
+## Evidence
+
+- Pattern in testing.framework: vitest
+
+---
+id: ibm-z-hackathon-instinct-test-types
+trigger: "When planning tests for a feature"
+confidence: 0.8
+domain: testing
+source: repo-analysis
+source_repo: Minifigures/ibm-z-hackathon
+---
+
+# Ibm Z Hackathon Instinct Test Types
+
+## Action
+
+Write both unit and integration tests
+
+## Evidence
+
+- Pattern in testing.testTypes: unit, integration
+
+---
+id: ibm-z-hackathon-instinct-mocking-style
+trigger: "When mocking modules in frontend tests"
+confidence: 0.8
+domain: testing
+source: repo-analysis
+source_repo: Minifigures/ibm-z-hackathon
+---
+
+# Ibm Z Hackathon Instinct Mocking Style
+
+## Action
+
+Use vi.mock for mocking
+
+## Evidence
+
+- Pattern in testing.mockingStyle: vi.mock
+
+---
+id: ibm-z-hackathon-instinct-commit-format
+trigger: "When writing a commit message"
+confidence: 0.9
+domain: git
+source: repo-analysis
+source_repo: Minifigures/ibm-z-hackathon
+---
+
+# Ibm Z Hackathon Instinct Commit Format
+
+## Action
+
+Use Conventional Commits format with prefixes: feat, docs, fix, merge
+
+## Evidence
+
+- Pattern in commits.type: conventional
+- Prefixes in commits.prefixes: feat, docs, fix, merge
+- Seen in commit: feat(backend): real-data mobility + multi-disease validation + research-grade ensemble
+
+---
+id: ibm-z-hackathon-instinct-commit-length
+trigger: "When writing a commit message"
+confidence: 0.7
+domain: git
+source: repo-analysis
+source_repo: Minifigures/ibm-z-hackathon
+---
+
+# Ibm Z Hackathon Instinct Commit Length
+
+## Action
+
+Keep commit messages concise, around 75 characters on average
+
+## Evidence
+
+- Pattern in commits.averageLength: 75
+
+---
+id: ibm-z-hackathon-instinct-add-disease-preset
+trigger: "When someone wants to support a new disease in the simulation and validate its predictions"
+confidence: 0.95
+domain: workflow
+source: repo-analysis
+source_repo: Minifigures/ibm-z-hackathon
+---
+
+# Ibm Z Hackathon Instinct Add Disease Preset
+
+## Action
+
+Edit diseases.json, countries.json, disease_corpus.json, update disease_lookup.py, validation scripts, API, and add or update tests
+
+## Evidence
+
+- Workflow: add-or-update-disease-preset-and-validation
+- Commit sequence and files in workflow example
+
+---
+id: ibm-z-hackathon-instinct-enhance-llm-disease-lookup
+trigger: "When someone wants to improve or expand the disease parameter lookup via LLM/RAG, or add new logic for origin country selection"
+confidence: 0.9
+domain: workflow
+source: repo-analysis
+source_repo: Minifigures/ibm-z-hackathon
+---
+
+# Ibm Z Hackathon Instinct Enhance Llm Disease Lookup
+
+## Action
+
+Edit disease_lookup.py, update disease_corpus.json, countries.json, frontend components and API, and add or update tests
+
+## Evidence
+
+- Workflow: add-or-enhance-llm-disease-lookup-feature
+- Commit sequence and files in workflow example
+
+---
+id: ibm-z-hackathon-instinct-frontend-panel-addition
+trigger: "When someone wants to add or significantly enhance a frontend visualization or interactive panel"
+confidence: 0.88
+domain: workflow
+source: repo-analysis
+source_repo: Minifigures/ibm-z-hackathon
+---
+
+# Ibm Z Hackathon Instinct Frontend Panel Addition
+
+## Action
+
+Create or update frontend/components/*.tsx, update app/page.tsx, modify lib/api.ts, and add or update tests
+
+## Evidence
+
+- Workflow: frontend-feature-or-ui-panel-addition
+- Commit sequence and files in workflow example
+
+---
+id: ibm-z-hackathon-instinct-merge-feature-branch
+trigger: "When someone wants to integrate a completed feature branch, especially after parallel development"
+confidence: 0.85
+domain: workflow
+source: repo-analysis
+source_repo: Minifigures/ibm-z-hackathon
+---
+
+# Ibm Z Hackathon Instinct Merge Feature Branch
+
+## Action
+
+Merge remote-tracking branch, resolve conflicts in overlapping files, reconcile test changes, and verify all tests pass
+
+## Evidence
+
+- Workflow: merge-feature-branch-with-conflict-resolution
+- Commit sequence and files in workflow example
+
