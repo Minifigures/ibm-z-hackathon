@@ -53,5 +53,19 @@
     "cryptic_preseeding": true,
     "notes": "Hypothetical novel pathogen. All parameters are user-tunable; presets are mid-range scenario. Conservative default: assume cryptic pre-spread for an unknown novel pathogen until clinical detection confirms otherwise.",
     "citations": []
+  },
+  "dengue2050": {
+    "id": "dengue2050",
+    "label": "Dengue (2050 climate)",
+    "r0": 1.8,
+    "incubation_days": 7.0,
+    "infectious_days": 5.0,
+    "cfr_pct": 0.5,
+    "notes": "Climate-shifted dengue under an IPCC RCP 4.5 scenario. Aedes aegypti and A. albopictus suitability is projected to expand into Mediterranean Europe, US Gulf Coast, and southern Canada by 2050, putting an additional ~1 billion people in at-risk regions. Use as a thought experiment for climate-driven outbreak planning.",
+    "citations": [
+      "Messina et al. 2019 Nat Microbiol",
+      "Ryan et al. 2019 PLOS NTD",
+      "IPCC AR6 WG II Ch 7 (2022)"
+    ]
   }
 }
