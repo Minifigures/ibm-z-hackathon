@@ -1,9 +1,10 @@
 """LLM explainer for simulation outputs.
 
 Provider chain (highest priority first):
-1. IBM watsonx.ai Granite     (gated on WATSONX_APIKEY + WATSONX_PROJECT_ID)
-2. Anthropic Claude            (gated on ANTHROPIC_API_KEY)
-3. Deterministic templated paragraph (always available)
+1. IBM watsonx.ai Granite      (gated on WATSONX_APIKEY + WATSONX_PROJECT_ID)
+2. Invoke endpoint             (gated on INVOKE_BASE_URL)
+3. Anthropic Claude            (gated on ANTHROPIC_API_KEY)
+4. Deterministic templated paragraph (always available)
 
 Each provider raises on failure; explain() catches the error, logs a warning,
 records it in error_chain, and continues to the next provider. The templated
@@ -18,6 +19,7 @@ import logging
 import os
 from typing import Any
 
+from . import invoke
 from . import watsonx
 
 log = logging.getLogger(__name__)
@@ -175,8 +177,18 @@ def _call_anthropic(simulation: dict[str, Any], focus_iso3: str | None) -> str:
     return text.strip()
 
 
+def _call_invoke(simulation: dict[str, Any], focus_iso3: str | None) -> str:
+    if not invoke.is_configured():
+        raise _ProviderUnavailable("INVOKE_BASE_URL missing")
+    try:
+        return invoke.generate(SYSTEM_PROMPT, _user_prompt(simulation, focus_iso3))
+    except invoke.InvokeNotConfigured as exc:
+        raise _ProviderUnavailable(str(exc)) from exc
+
+
 _PROVIDERS = (
     ("watsonx", _call_watsonx),
+    ("invoke", _call_invoke),
     ("anthropic", _call_anthropic),
 )
 
