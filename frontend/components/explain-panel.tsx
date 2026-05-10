@@ -1,18 +1,5 @@
 "use client";
 
-function sourceLabel(source: string): string {
-  switch (source) {
-    case "watsonx":
-      return "IBM Granite via watsonx.ai";
-    case "anthropic":
-      return "Claude Haiku";
-    case "template":
-      return "templated fallback";
-    default:
-      return source;
-  }
-}
-
 type Props = {
   text: string | null;
   source: string | null;
@@ -21,7 +8,24 @@ type Props = {
   focusName: string | null;
 };
 
+const SOURCE_LABEL: Record<string, { label: string; classes: string }> = {
+  watsonx: {
+    label: "IBM Granite via watsonx.ai",
+    // IBM blue accent. Reads as "the IBM AI ran this" in the demo.
+    classes: "bg-[#0f62fe]/15 text-[#78a9ff] border border-[#0f62fe]/40",
+  },
+  anthropic: {
+    label: "Claude Haiku",
+    classes: "bg-accent/15 text-accent border border-accent/40",
+  },
+  template: {
+    label: "Templated fallback",
+    classes: "bg-slate-700/40 text-slate-400 border border-slate-600/40",
+  },
+};
+
 export function ExplainPanel({ text, source, loading, onRequest, focusName }: Props) {
+  const meta = source ? SOURCE_LABEL[source] ?? null : null;
   return (
     <div className="rounded-md border border-ink-600 bg-ink-800">
       <div className="flex items-center justify-between px-3 py-2 border-b border-ink-600">
@@ -45,9 +49,14 @@ export function ExplainPanel({ text, source, loading, onRequest, focusName }: Pr
           </p>
         )}
       </div>
-      {source ? (
-        <div className="px-3 pb-2 text-[10px] text-slate-500">
-          source: {sourceLabel(source)}
+      {meta ? (
+        <div className="px-3 pb-2 flex items-center gap-2">
+          <span
+            className={`text-[10px] uppercase tracking-wide font-medium px-1.5 py-0.5 rounded ${meta.classes}`}
+            title="Provider that generated this explanation"
+          >
+            {meta.label}
+          </span>
         </div>
       ) : null}
     </div>
