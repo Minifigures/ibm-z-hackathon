@@ -44,6 +44,19 @@ describe("ExplainPanel", () => {
     expect(screen.getByText(/Claude Haiku/)).toBeInTheDocument();
   });
 
+  it("labels watsonx-sourced explanations as IBM Granite via watsonx.ai", () => {
+    render(
+      <ExplainPanel
+        text="Granite says..."
+        source="watsonx"
+        loading={false}
+        onRequest={() => {}}
+        focusName={null}
+      />,
+    );
+    expect(screen.getByText(/IBM Granite via watsonx\.ai/)).toBeInTheDocument();
+  });
+
   it("disables the button while loading and surfaces the loading label", () => {
     render(
       <ExplainPanel
