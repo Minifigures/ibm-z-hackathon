@@ -1,0 +1,4 @@
+# Backtest harness extras on top of backend/requirements.txt.
+# numpy is already pinned in the parent file; we only need an HTTP client
+# to fetch the JHU CSSE archive.
+requests>=2.28

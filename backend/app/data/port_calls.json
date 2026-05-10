@@ -1,0 +1,151 @@
+{
+  "_meta": {
+    "fields": {
+      "port_count": "How many of the country's ports appear in the Top-50",
+      "port_teu_millions": "Sum of TEU (millions, annual) across this country's ports in the published Top-50 ranking. Used as a port-call volume proxy in the gravity model."
+    },
+    "generated_utc": "2026-05-10T07:13:37+00:00",
+    "n_countries": 34,
+    "notes": "Static snapshot; refresh manually when the next ranking publishes. Countries absent here fall back to the synthetic hub_index in mobility.py.",
+    "source": "Lloyd's List One Hundred Ports 2023 / World Shipping Council Top 50 (reported 2022 throughput)",
+    "source_year": 2022
+  },
+  "countries": {
+    "ARE": {
+      "port_count": 1,
+      "port_teu_millions": 13.97
+    },
+    "ARG": {
+      "port_count": 1,
+      "port_teu_millions": 1.45
+    },
+    "AUS": {
+      "port_count": 1,
+      "port_teu_millions": 2.66
+    },
+    "BEL": {
+      "port_count": 1,
+      "port_teu_millions": 13.5
+    },
+    "BGD": {
+      "port_count": 1,
+      "port_teu_millions": 3.21
+    },
+    "BRA": {
+      "port_count": 1,
+      "port_teu_millions": 5.2
+    },
+    "CHN": {
+      "port_count": 7,
+      "port_teu_millions": 194.41
+    },
+    "COL": {
+      "port_count": 1,
+      "port_teu_millions": 3.51
+    },
+    "DEU": {
+      "port_count": 2,
+      "port_teu_millions": 12.91
+    },
+    "ESP": {
+      "port_count": 2,
+      "port_teu_millions": 9.84
+    },
+    "FRA": {
+      "port_count": 1,
+      "port_teu_millions": 3.04
+    },
+    "GBR": {
+      "port_count": 1,
+      "port_teu_millions": 3.5
+    },
+    "GRC": {
+      "port_count": 1,
+      "port_teu_millions": 5.06
+    },
+    "HKG": {
+      "port_count": 1,
+      "port_teu_millions": 16.69
+    },
+    "IDN": {
+      "port_count": 1,
+      "port_teu_millions": 6.57
+    },
+    "IND": {
+      "port_count": 1,
+      "port_teu_millions": 7.17
+    },
+    "ISR": {
+      "port_count": 1,
+      "port_teu_millions": 1.5
+    },
+    "JPN": {
+      "port_count": 2,
+      "port_teu_millions": 7.15
+    },
+    "KOR": {
+      "port_count": 1,
+      "port_teu_millions": 22.07
+    },
+    "LKA": {
+      "port_count": 1,
+      "port_teu_millions": 6.86
+    },
+    "MAR": {
+      "port_count": 1,
+      "port_teu_millions": 7.59
+    },
+    "MYS": {
+      "port_count": 2,
+      "port_teu_millions": 23.73
+    },
+    "NLD": {
+      "port_count": 1,
+      "port_teu_millions": 14.45
+    },
+    "OMN": {
+      "port_count": 1,
+      "port_teu_millions": 4.5
+    },
+    "PAK": {
+      "port_count": 1,
+      "port_teu_millions": 3.3
+    },
+    "PHL": {
+      "port_count": 1,
+      "port_teu_millions": 5.04
+    },
+    "SAU": {
+      "port_count": 1,
+      "port_teu_millions": 4.54
+    },
+    "SGP": {
+      "port_count": 1,
+      "port_teu_millions": 37.29
+    },
+    "THA": {
+      "port_count": 1,
+      "port_teu_millions": 8.74
+    },
+    "TUR": {
+      "port_count": 1,
+      "port_teu_millions": 2.06
+    },
+    "TWN": {
+      "port_count": 1,
+      "port_teu_millions": 9.49
+    },
+    "USA": {
+      "port_count": 7,
+      "port_teu_millions": 45.49
+    },
+    "VNM": {
+      "port_count": 1,
+      "port_teu_millions": 7.86
+    },
+    "ZAF": {
+      "port_count": 1,
+      "port_teu_millions": 2.51
+    }
+  }
+}
