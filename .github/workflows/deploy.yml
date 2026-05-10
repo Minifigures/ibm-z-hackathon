@@ -30,6 +30,7 @@ jobs:
           WATSONX_APIKEY: ${{ secrets.WATSONX_APIKEY }}
           WATSONX_PROJECT_ID: ${{ secrets.WATSONX_PROJECT_ID }}
           WATSONX_URL: ${{ secrets.WATSONX_URL }}
+          WATSONX_MODEL_ID: ${{ secrets.WATSONX_MODEL_ID }}
         run: |
           # The remote heredoc is single-quoted (literal), but we still need
           # the watsonx secrets to be readable by the remote bash. We pass
@@ -38,7 +39,7 @@ jobs:
           # remote script reads when writing /opt/disease-outflow/backend/.env.
           ssh -o BatchMode=yes \
             "$DEPLOY_USER@$DEPLOY_HOST" \
-            "WATSONX_APIKEY='$WATSONX_APIKEY' WATSONX_PROJECT_ID='$WATSONX_PROJECT_ID' WATSONX_URL='$WATSONX_URL' bash -s" <<'REMOTE'
+            "WATSONX_APIKEY='$WATSONX_APIKEY' WATSONX_PROJECT_ID='$WATSONX_PROJECT_ID' WATSONX_URL='$WATSONX_URL' WATSONX_MODEL_ID='$WATSONX_MODEL_ID' bash -s" <<'REMOTE'
           set -euo pipefail
           APP_DIR=/opt/disease-outflow
           cd "$APP_DIR"
@@ -80,6 +81,7 @@ jobs:
             printf 'WATSONX_APIKEY=%s\n'     "${WATSONX_APIKEY:-}"
             printf 'WATSONX_PROJECT_ID=%s\n' "${WATSONX_PROJECT_ID:-}"
             printf 'WATSONX_URL=%s\n'        "${WATSONX_URL:-}"
+            printf 'WATSONX_MODEL_ID=%s\n'   "${WATSONX_MODEL_ID:-}"
           } > backend/.env
           chmod 600 backend/.env
 
