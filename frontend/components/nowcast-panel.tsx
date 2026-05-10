@@ -41,7 +41,7 @@ function parseCSV(text: string): { ok: NowcastObservation[]; errors: string[] } 
 }
 
 export function NowcastPanel({ loading, result, onRun, onClear, seedIso3 }: Props) {
-  const [text, setText] = useState("");
+  const [text, setText] = useState(PLACEHOLDER);
   const [errs, setErrs] = useState<string[]>([]);
 
   const submit = () => {
