@@ -129,8 +129,21 @@ def simulate(req: SimulateRequest) -> dict[str, Any]:
 
 
 @app.post("/explain")
-def explain_endpoint(req: ExplainRequest) -> dict[str, str]:
-    return explain(req.simulation, focus_iso3=req.focus_iso3)
+def explain_endpoint(req: ExplainRequest) -> dict[str, Any]:
+    # explain() should always return a dict, never raise — but template fallback
+    # currently dereferences top_imports[0] without guarding for the empty case
+    # (will be fixed properly in a follow-up). Wrap so the front-end gets a
+    # readable error string instead of a 500 with no JSON.
+    try:
+        return explain(req.simulation, focus_iso3=req.focus_iso3)
+    except Exception as exc:  # noqa: BLE001 - explainer is best-effort; surface the error
+        import traceback as _tb
+        return {
+            "text": "Explainer crashed; using fallback.",
+            "source": "error",
+            "error": f"{type(exc).__name__}: {exc}",
+            "trace": _tb.format_exc()[-600:],
+        }
 
 
 @app.post("/nowcast")
