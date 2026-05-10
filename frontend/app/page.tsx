@@ -91,13 +91,20 @@ export default function Page() {
   const onPickPreset = (id: string) => {
     const p = presets[id];
     if (!p) return;
-    update({
+    const patch: Partial<SimulateRequest> = {
       disease_id: id,
       r0: p.r0,
       incubation_days: p.incubation_days,
       infectious_days: p.infectious_days,
       cfr_pct: p.cfr_pct,
-    });
+    };
+    // If the preset declares a historical origin and we model it, snap the
+    // origin selector to it. Pathogen X intentionally leaves origin null so
+    // it preserves the user's last-touched country.
+    if (p.likely_origin_iso3 && countries.some((c) => c.iso3 === p.likely_origin_iso3)) {
+      patch.start_iso3 = p.likely_origin_iso3;
+    }
+    update(patch);
   };
 
   const onAutoFill = (p: DiseaseParams) => {

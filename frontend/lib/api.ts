@@ -14,6 +14,7 @@ export type DiseasePreset = {
   incubation_days: number;
   infectious_days: number;
   cfr_pct: number;
+  likely_origin_iso3?: string | null;
   notes: string;
   citations: string[];
 };
