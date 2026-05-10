@@ -69,5 +69,15 @@
   {"iso3": "AFG", "name": "Afghanistan", "lat": 34.5553, "lng": 69.2075, "population": 41000000, "hub": 0.2},
   {"iso3": "ROU", "name": "Romania", "lat": 44.4268, "lng": 26.1025, "population": 19000000, "hub": 0.6},
   {"iso3": "CZE", "name": "Czechia", "lat": 50.0755, "lng": 14.4378, "population": 10500000, "hub": 0.8},
-  {"iso3": "HUN", "name": "Hungary", "lat": 47.4979, "lng": 19.0402, "population": 9700000, "hub": 0.7}
+  {"iso3": "HUN", "name": "Hungary", "lat": 47.4979, "lng": 19.0402, "population": 9700000, "hub": 0.7},
+  {"iso3": "COD", "name": "DR Congo", "lat": -4.4419, "lng": 15.2663, "population": 99000000, "hub": 0.4},
+  {"iso3": "UGA", "name": "Uganda", "lat": 0.3476, "lng": 32.5825, "population": 48000000, "hub": 0.4},
+  {"iso3": "AGO", "name": "Angola", "lat": -8.8390, "lng": 13.2894, "population": 36000000, "hub": 0.4},
+  {"iso3": "GIN", "name": "Guinea", "lat": 9.6412, "lng": -13.5784, "population": 14000000, "hub": 0.2},
+  {"iso3": "LBR", "name": "Liberia", "lat": 6.3008, "lng": -10.7977, "population": 5500000, "hub": 0.2},
+  {"iso3": "SLE", "name": "Sierra Leone", "lat": 8.4849, "lng": -13.2299, "population": 8400000, "hub": 0.2},
+  {"iso3": "CMR", "name": "Cameroon", "lat": 3.8480, "lng": 11.5021, "population": 28000000, "hub": 0.4},
+  {"iso3": "CIV", "name": "Côte d'Ivoire", "lat": 5.3600, "lng": -4.0083, "population": 28000000, "hub": 0.5},
+  {"iso3": "BOL", "name": "Bolivia", "lat": -16.4897, "lng": -68.1193, "population": 12000000, "hub": 0.3},
+  {"iso3": "PAN", "name": "Panama", "lat": 8.9824, "lng": -79.5199, "population": 4400000, "hub": 0.6}
 ]
