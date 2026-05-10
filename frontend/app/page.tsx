@@ -4,6 +4,7 @@ import dynamic from "next/dynamic";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ForecastChart } from "@/components/forecast-chart";
 import { ExplainPanel } from "@/components/explain-panel";
+import { SDGBadge } from "@/components/sdg-badge";
 import { HubList } from "@/components/hub-list";
 import { SliderRow } from "@/components/slider-row";
 import {
@@ -291,6 +292,7 @@ export default function Page() {
       </aside>
 
       <section className="row-start-2 relative">
+        <SDGBadge />
         <div className="absolute inset-0">
           <WorldMap
             countries={countries}
