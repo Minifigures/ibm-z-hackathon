@@ -43,7 +43,7 @@ def test_presets_keys():
     r = client.get("/presets")
     assert r.status_code == 200
     data = r.json()
-    assert set(data.keys()) == {"covid19", "flu", "mpox", "pathogenx"}
+    assert set(data.keys()) == {"covid19", "flu", "mpox", "pathogenx", "dengue2050"}
     for v in data.values():
         assert {"id", "label", "r0", "incubation_days", "infectious_days", "cfr_pct"} <= v.keys()
 
