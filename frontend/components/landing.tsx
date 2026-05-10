@@ -22,24 +22,31 @@ export function Landing({ onLaunch }: Props) {
 
   return (
     <div
-      className={`fixed inset-0 z-50 overflow-hidden bg-ink-950 text-slate-100 transition-opacity duration-500 ${
+      className={`fixed inset-0 z-50 overflow-hidden text-slate-100 transition-opacity duration-500 ${
         leaving ? "pointer-events-none opacity-0" : "opacity-100"
       }`}
+      style={{ backgroundColor: "#05080d" }}
     >
-      <div className="absolute inset-0">
+      <div className="absolute inset-0" style={{ backgroundColor: "#05080d" }}>
         <div
           className="absolute inset-0"
           style={{
             background:
-              "radial-gradient(60% 50% at 50% 35%, rgba(124, 242, 200, 0.18) 0%, rgba(15, 20, 28, 0) 70%), radial-gradient(40% 30% at 80% 80%, rgba(251, 146, 60, 0.10) 0%, rgba(15, 20, 28, 0) 70%)",
+              "radial-gradient(60% 50% at 50% 35%, rgba(124, 242, 200, 0.22) 0%, rgba(5, 8, 13, 0) 70%), radial-gradient(40% 30% at 82% 78%, rgba(251, 146, 60, 0.12) 0%, rgba(5, 8, 13, 0) 70%)",
           }}
         />
         <div
-          className="absolute inset-0 opacity-[0.08]"
+          className="absolute inset-0 opacity-[0.06]"
           style={{
             backgroundImage:
               "radial-gradient(circle at 1px 1px, rgba(255,255,255,0.55) 1px, transparent 0)",
             backgroundSize: "32px 32px",
+          }}
+        />
+        <div
+          className="absolute inset-x-0 bottom-0 h-1/3"
+          style={{
+            background: "linear-gradient(to bottom, rgba(5, 8, 13, 0) 0%, rgba(5, 8, 13, 0.6) 100%)",
           }}
         />
       </div>
