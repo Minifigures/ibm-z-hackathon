@@ -22,6 +22,7 @@ from . import watsonx_client
 
 DATA_DIR = Path(__file__).parent / "data"
 CORPUS_PATH = DATA_DIR / "disease_corpus.json"
+COUNTRIES_PATH = DATA_DIR / "countries.json"
 TOP_K = 3
 MAX_CACHE_SIZE = 256
 
@@ -35,11 +36,14 @@ class DiseaseParams(BaseModel):
     sources: list[str] = Field(default_factory=list, max_length=6)
     confidence: str = Field("medium", pattern=r"^(high|medium|low)$")
     notes: str = Field("", max_length=320)
+    likely_origin_iso3: str | None = Field(default=None)
+    likely_origin_reason: str = Field("", max_length=200)
 
 
 _cache: dict[str, dict[str, Any]] = {}
 _corpus: list[dict[str, Any]] | None = None
 _corpus_embeddings: np.ndarray | None = None
+_valid_iso3: set[str] | None = None
 
 
 def _load_corpus() -> list[dict[str, Any]]:
@@ -47,6 +51,14 @@ def _load_corpus() -> list[dict[str, Any]]:
     if _corpus is None:
         _corpus = json.loads(CORPUS_PATH.read_text(encoding="utf-8"))
     return _corpus
+
+
+def _load_valid_iso3() -> set[str]:
+    global _valid_iso3
+    if _valid_iso3 is None:
+        countries = json.loads(COUNTRIES_PATH.read_text(encoding="utf-8"))
+        _valid_iso3 = {c["iso3"] for c in countries}
+    return _valid_iso3
 
 
 def _embed(texts: list[str]) -> list[list[float]] | None:
@@ -92,12 +104,12 @@ def _retrieve(query: str, top_k: int = TOP_K) -> list[dict[str, Any]]:
     return [{**corpus[int(i)], "score": float(sims[int(i)])} for i in order]
 
 
-SYSTEM_PROMPT = (
+SYSTEM_PROMPT_TEMPLATE = (
     "You are an epidemiology parameter extractor. Given a disease query and "
     "reference passages, return ONE JSON object with median values from "
     "peer-reviewed literature.\n\n"
     "Required schema:\n"
-    "{\n"
+    "{{\n"
     '  "label": "<canonical disease name>",\n'
     '  "r0": <basic reproduction number, float in [0.5, 8.0]>,\n'
     '  "incubation_days": <median incubation in days, float in [0.5, 30]>,\n'
@@ -105,15 +117,26 @@ SYSTEM_PROMPT = (
     '  "cfr_pct": <case fatality rate %, float in [0.01, 50]>,\n'
     '  "sources": [<short citation strings, max 6>],\n'
     '  "confidence": "high"|"medium"|"low",\n'
-    '  "notes": "<one-sentence caveat, max 320 chars>"\n'
-    "}\n\n"
+    '  "notes": "<one-sentence caveat, max 320 chars>",\n'
+    '  "likely_origin_iso3": "<ISO3 code from the allowed list, or null>",\n'
+    '  "likely_origin_reason": "<short reason, max 200 chars>"\n'
+    "}}\n\n"
+    "Allowed ISO3 codes for likely_origin_iso3 (pick the closest match for "
+    "where this pathogen first emerged or where outbreaks have historically "
+    "originated; null if unclear):\n{iso3_list}\n\n"
     "Rules:\n"
     "- Use median or central estimates, not extremes.\n"
     "- Prefer values from the supplied reference passages when relevant.\n"
+    "- likely_origin_iso3 MUST be from the allowed list above (uppercase) or null.\n"
     "- If the disease is unknown or the query is nonsensical, return "
-    '{"error": "<short reason>"}.\n'
+    '{{"error": "<short reason>"}}.\n'
     "- Output ONLY the JSON object. No prose, no markdown, no code fences."
 )
+
+
+def _system_prompt() -> str:
+    iso3_list = ", ".join(sorted(_load_valid_iso3()))
+    return SYSTEM_PROMPT_TEMPLATE.format(iso3_list=iso3_list)
 
 
 def _build_user_prompt(query: str, retrieved: list[dict[str, Any]]) -> str:
@@ -185,10 +208,10 @@ def lookup(name: str) -> dict[str, Any]:
     try:
         response = chat.chat(
             messages=[
-                {"role": "system", "content": SYSTEM_PROMPT},
+                {"role": "system", "content": _system_prompt()},
                 {"role": "user", "content": user_prompt},
             ],
-            params={"max_tokens": 500, "temperature": 0.1},
+            params={"max_tokens": 600, "temperature": 0.1},
         )
     except Exception as exc:  # noqa: BLE001
         return {"status": "rejected", "message": f"Model call failed: {exc}"}
@@ -210,6 +233,17 @@ def lookup(name: str) -> dict[str, Any]:
             "errors": [{"loc": e["loc"], "msg": e["msg"]} for e in exc.errors()],
             "raw": raw_text[:500],
         }
+
+    # Soft-validate origin against the modelled-country list. If the LLM
+    # picks something we don't model, drop the field instead of rejecting
+    # the whole lookup.
+    if params.likely_origin_iso3:
+        candidate = params.likely_origin_iso3.strip().upper()
+        if candidate in _load_valid_iso3():
+            params.likely_origin_iso3 = candidate
+        else:
+            params.likely_origin_iso3 = None
+            params.likely_origin_reason = ""
 
     result = {
         "status": "ok",
