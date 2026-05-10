@@ -32,6 +32,17 @@
     "notes": "2022 outbreak parameters; transmission heterogeneity is high so this is a population-average view. No cryptic pre-spread: clinical lesions are visible, and the 2022 outbreak propagated through specific MSM social networks rather than aggregate mobility.",
     "citations": ["Du et al. 2022 Lancet Reg Health Eur"]
   },
+  "ebola": {
+    "id": "ebola",
+    "label": "Ebola (Zaire EBOV)",
+    "r0": 1.51,
+    "incubation_days": 9.7,
+    "infectious_days": 7.5,
+    "cfr_pct": 50.0,
+    "cryptic_preseeding": false,
+    "notes": "Zaire ebolavirus parameters from the 2014-16 West Africa outbreak (Althaus 2014). No cryptic pre-spread: clinical syndrome is dramatic and triggers rapid surveillance once recognised. Caveat: Ebola spreads predominantly through close contact along land routes (Guinea -> Liberia -> Sierra Leone in 2014), so an air-mobility-based model under-predicts overland importation; expect lower top-K precision than for air-driven coronaviruses.",
+    "citations": ["Althaus 2014 PLOS Curr", "WHO Ebola Response Team 2014 NEJM", "Faye et al. 2015 Lancet ID"]
+  },
   "sars": {
     "id": "sars",
     "label": "SARS (2003)",

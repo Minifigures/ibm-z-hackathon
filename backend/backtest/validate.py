@@ -116,6 +116,24 @@ SARS_CMP_DATE      = "2003-04-11"
 # before international notification).
 SARS_SEED_INITIAL  = 800
 
+# Ebola 2014 West Africa day-+30 truth: cmrivers/ebola country_timeseries.
+# WHO formal notification was 2014-03-23. The next 30 days saw spread within
+# Guinea + first crossings into Liberia (overland through Lofa County). Source
+# CSV has gaps per country/per day; we use the closest available datapoint
+# in the [Apr 16, Apr 23] window for each country. This is a known-hard test
+# for an air-mobility-only model: Ebola moved via porous land borders, and
+# the model's air gravity does not capture it.
+EBOLA_DAY30_TRUTH = {
+    "GIN": 218,   # 2014-04-23 (WHO Sit-Rep)
+    "LBR":  27,   # 2014-04-17 (most recent populated entry pre-day+30)
+    "SLE":   0,   # 2014-04-23 — first SLE confirmed case was May 25
+}
+EBOLA_SEED_DATE    = "2014-03-23"
+EBOLA_CMP_DATE     = "2014-04-22"
+# WHO Ebola Response Team 2014 NEJM backcalculated true infections in Guinea
+# at ~2x to 3x the lab-confirmed. Lab-confirmed on Mar 23 was ~50; use 100.
+EBOLA_SEED_INITIAL = 100
+
 
 # ---------------------------------------------------------------------------
 # Metrics
@@ -334,6 +352,13 @@ if __name__ == "__main__":
         "2003 SARS / CHN / 2003-03-12 -> 2003-04-11 (vs WHO Sit-Rep 24)",
         _params("sars", "CHN", 2.7, 6.0, 8.0, 0.3, SARS_SEED_INITIAL),
         sars_truth, SARS_CMP_DATE))
+
+    # --- 2014 Ebola (West Africa) ---
+    ebola_truth = {k: v for k, v in EBOLA_DAY30_TRUTH.items()}
+    results.append(_validate(
+        "2014 Ebola / GIN / 2014-03-23 -> 2014-04-22 (vs cmrivers/ebola)",
+        _params("ebola", "GIN", 1.51, 9.7, 7.5, 0.3, EBOLA_SEED_INITIAL),
+        ebola_truth, EBOLA_CMP_DATE))
 
     # --- summary ---
     print(f"\n{'='*78}\nSUMMARY (literature defaults, no scenario-specific tuning)\n{'='*78}")

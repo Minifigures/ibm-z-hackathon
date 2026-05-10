@@ -14,6 +14,7 @@ from .validate import (
     H1N1_DAY30_TRUTH, H1N1_CMP_DATE, H1N1_SEED_INITIAL,
     MPOX_CMP_DATE,
     SARS_DAY30_TRUTH, SARS_CMP_DATE, SARS_SEED_INITIAL,
+    EBOLA_DAY30_TRUTH, EBOLA_CMP_DATE, EBOLA_SEED_INITIAL,
     _load_owid_mpox_truth, _load_jhu_covid_truth,
     _spearman, _pearson, _top_precision,
 )
@@ -131,6 +132,12 @@ if __name__ == "__main__":
         "2003 SARS / CHN / 2003-03-12 (ensemble)",
         _params("sars", "CHN", 2.7, 6.0, 8.0, 0.3, SARS_SEED_INITIAL),
         sars_truth))
+
+    ebola_truth = dict(EBOLA_DAY30_TRUTH)
+    results.append(_validate_ensemble(
+        "2014 Ebola / GIN / 2014-03-23 (ensemble, overland-limit test)",
+        _params("ebola", "GIN", 1.51, 9.7, 7.5, 0.3, EBOLA_SEED_INITIAL),
+        ebola_truth))
 
     print(f"\n{'='*78}\nSUMMARY (4-model ensemble + UN migrants + BTS + corridors)\n{'='*78}")
     print(f"{'scenario':<55} {'n':>4} {'cov95':>6} {'rho':>6} {'r':>6} {'top5':>5} {'top10':>6} {'logMAE':>7}")
