@@ -85,5 +85,50 @@
       "Ryan et al. 2019 PLOS NTD",
       "IPCC AR6 WG II Ch 7 (2022)"
     ]
+  },
+  "cholera2050": {
+    "id": "cholera2050",
+    "label": "Cholera (2050 SST shift)",
+    "r0": 2.2,
+    "incubation_days": 1.5,
+    "infectious_days": 5.0,
+    "cfr_pct": 1.5,
+    "likely_origin_iso3": "BGD",
+    "notes": "Climate-shifted Vibrio cholerae outbreak under IPCC RCP 4.5 sea-surface-temperature warming. SST anomalies in the Bay of Bengal and East Africa coast lengthen the seasonal V. cholerae bloom and expand coastal-water suitability into formerly cooler regions, increasing seeding pressure on coastal cities.",
+    "citations": [
+      "Lobitz et al. 2000 PNAS",
+      "Vezzulli et al. 2016 Nat Microbiol",
+      "IPCC AR6 WG II Ch 7 (2022)"
+    ]
+  },
+  "malaria2050": {
+    "id": "malaria2050",
+    "label": "Malaria (2050 highland warming)",
+    "r0": 1.6,
+    "incubation_days": 12.0,
+    "infectious_days": 14.0,
+    "cfr_pct": 1.0,
+    "likely_origin_iso3": "ETH",
+    "notes": "Climate-shifted Plasmodium falciparum under IPCC RCP 4.5. Documented highland warming in East African (Ethiopian, Kenyan) highlands and Andean South America places previously naive populations at risk via Anopheles arabiensis range expansion into 1500-2000 m elevations.",
+    "citations": [
+      "Pascual et al. 2006 PNAS",
+      "Siraj et al. 2014 Science",
+      "IPCC AR6 WG II Ch 7 (2022)"
+    ]
+  },
+  "lyme2050": {
+    "id": "lyme2050",
+    "label": "Lyme (2050 northward Ixodes)",
+    "r0": 1.2,
+    "incubation_days": 14.0,
+    "infectious_days": 21.0,
+    "cfr_pct": 0.05,
+    "likely_origin_iso3": "USA",
+    "notes": "Climate-shifted Borrelia burgdorferi under IPCC RCP 4.5. Warmer winters allow Ixodes scapularis (deer tick) populations to colonise further north into Canada and the Nordic region; established US/EU range densifies.",
+    "citations": [
+      "Ogden et al. 2014 Lancet ID",
+      "Couper et al. 2021 PNAS",
+      "IPCC AR6 WG II Ch 7 (2022)"
+    ]
   }
 }
