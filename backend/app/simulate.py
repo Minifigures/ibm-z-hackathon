@@ -129,6 +129,27 @@ def _model_variants() -> list[ModelVariant]:
     ]
 
 
+def _offline_backtest_block() -> dict | None:
+    """Add the Wuhan-2020 backtest result. Lazy import breaks the
+    `simulate -> backtest -> simulate` cycle."""
+    try:
+        from . import backtest
+
+        result = backtest.compute_wuhan_calibration()
+        return {
+            "scenario_id": result.scenario_id,
+            "holdout_count": result.holdout_count,
+            "coverage_95": result.coverage_95,
+            "coverage_50": result.coverage_50,
+            "crps_norm_per_100k": result.crps_norm_per_100k,
+            "multibin_log_score": result.multibin_log_score,
+            "reporting_fraction": result.reporting_fraction,
+            "note": result.note,
+        }
+    except Exception as exc:  # noqa: BLE001 - calibration must never break /simulate
+        return {"unavailable": True, "error": f"{type(exc).__name__}: {exc}"}
+
+
 def _build_calibration(
     cum_terminal: np.ndarray,
     populations: np.ndarray,
@@ -147,6 +168,7 @@ def _build_calibration(
             "truths inside the 95% band of the rest; CRPS per Funk et al. 2018 (Epidemics, "
             "normalised /100k); multibin log score per Reich et al. 2019 PNAS FluSight."
         ),
+        "offline_backtest": _offline_backtest_block(),
     }
 
 

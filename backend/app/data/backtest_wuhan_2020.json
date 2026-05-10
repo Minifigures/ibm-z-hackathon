@@ -1,0 +1,32 @@
+{
+  "scenario_id": "wuhan_2020",
+  "description": "COVID-19 ancestral strain seeded in China on 2020-01-01. Ground-truth values are confirmed-case counts as of 2020-01-30 from the JHU CSSE COVID-19 archive (https://github.com/CSSEGISandData/COVID-19), aggregated to country level.",
+  "seed_iso3": "CHN",
+  "seed_infected": 500,
+  "horizon_days": 30,
+  "reporting_fraction": 0.10,
+  "reporting_fraction_note": "Confirmed cases at day 30 are a small fraction of true infections during early-2020 surveillance ramp-up. Imperial College and CDC retrospectives place the case-to-infection ratio in the 5% to 15% range for January 2020. We deflate the simulator's projected infections by 0.10 before comparing to confirmed counts so the backtest is on like-for-like terms.",
+  "ground_truth": {
+    "THA": 14,
+    "JPN": 15,
+    "KOR": 11,
+    "TWN": 10,
+    "USA": 6,
+    "AUS": 9,
+    "SGP": 13,
+    "VNM": 5,
+    "FRA": 6,
+    "DEU": 5,
+    "ARE": 4,
+    "CAN": 3,
+    "ITA": 2,
+    "GBR": 2,
+    "RUS": 2,
+    "FIN": 1,
+    "ESP": 1,
+    "IND": 1,
+    "PHL": 1,
+    "NPL": 1,
+    "LKA": 1
+  }
+}

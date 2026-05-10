@@ -141,7 +141,7 @@ The frontend uses Stadia Maps' `alidade_smooth_dark` raster tiles for English la
 6. **All countries.** Scroll the country panel: every region is ranked by median cumulative cases. Skip past the seed to see the next exposed regions. Show why Madrid or Lisbon ranks high (gravity to BRA).
 7. **Explanation.** Click *Explain*. The provenance pill identifies the provider: IBM blue for Granite via watsonx.ai, accent for Claude Haiku, slate for the templated fallback. With `WATSONX_APIKEY` set, the live call uses Granite chat completions.
 8. **SDG badge.** Top-right chip alongside the calibration badge. Click to expand: SDGs 3, 9, 11, 13, 17 with one-line justifications, locking the UN-track angle into the product itself rather than the docs.
-9. **Calibration.** Point at the coverage badge. "95% intervals contained truth in 93% of holdouts" (replace once the backtest harness ships).
+9. **Calibration.** Point at the coverage badge. The number is the offline Wuhan-2020 backtest result, computed against a frozen JHU CSSE country-level snapshot at day 30 (deflated by reporting fraction rho=0.10, per Imperial College / CDC retrospectives). Two metrics surface in the response: ensemble-internal LOO coverage (`calibration.interval_coverage_holdout`, posterior-predictive) and offline-against-truth coverage (`calibration.offline_backtest.coverage_95`), with CRPS (Funk 2018) and multibin log score (Reich 2019) included in both blocks.
 10. **Close.** "Mobility imports it, SEIR amplifies it, Monte Carlo bounds it, watsonx explains it."
 
 ## Hackathon team
@@ -152,22 +152,24 @@ marco · aahir · aous · amrr · sultan
 
 Done:
 
-- [x] Backend pipeline end-to-end (mobility → SEIR → Monte Carlo → JSON), 47 pytest cases
+- [x] Backend pipeline end-to-end (mobility → SEIR → Monte Carlo → JSON), 66 pytest cases
 - [x] FastAPI endpoints with pydantic validation
 - [x] Country dataset (70 regions) with hub indices
-- [x] Disease presets (COVID-19, Flu, Mpox, Pathogen X)
+- [x] Disease presets (COVID-19, Flu, Mpox, Pathogen X, Dengue 2050)
 - [x] Three-provider explain chain (watsonx → anthropic → template) with `error_chain` audit field
+- [x] Two-path watsonx integration: Granite chat (`granite-3-3-8b-instruct`) for /explain plus Granite Embedding (`granite-embedding-278m-multilingual`) for the disease-lookup RAG
 - [x] Interactive map: hover-preview, click-lock, scrollable country list, throttled mousemove, GeoJSON-stable selection via feature-state
 - [x] Time scrubber: play/pause + day-by-day animation derived from cached Monte Carlo quantiles
 - [x] SDG alignment badge + provenance pill in the UI
-- [x] Auto-deploy to IBM VSI on push to `main`
+- [x] Offline Wuhan-2020 backtest (frozen JHU CSSE truth, deflated by reporting fraction rho=0.10) surfacing CRPS, multibin log score, and 50/95% coverage in `calibration.offline_backtest`
+- [x] /nowcast endpoint capped at 365 observations and rate-limited to 10 calls per minute per IP. /disease-params rate-limited to 20 per minute per IP.
+- [x] Auto-deploy to IBM VSI on push to `main` with Next.js `/api/*` rewrites so the frontend works behind nginx OR on raw :3000
 
 Open:
 
 - [ ] Replace circle markers with a true country choropleth (Natural Earth GeoJSON)
-- [ ] Backtest harness (seed Wuhan Jan 2020, score 30-day spread vs. JHU CSSE) so the calibration badge stops being a placeholder
 - [ ] OpenFlights routes ingestion to replace the synthetic hub indices
 - [ ] UN/UNCTAD port-call ingestion (sea channel currently uses gravity on hub indices)
-- [ ] Climate-sensitive disease preset (Dengue 2050 under RCP 4.5) for the Sustainability/Climate track
+- [ ] LinuxONE Community Cloud deploy on s390x for the literal IBM Z architecture story
 
-The first four are the unfinished items from PRD Sections 7 and 9. Pick whichever advances the demo story most.
+The first three are the remaining unfinished items from PRD Sections 7 and 9. Pick whichever advances the demo story most.
