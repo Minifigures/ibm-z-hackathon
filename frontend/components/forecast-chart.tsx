@@ -23,6 +23,8 @@ type Props = {
   variantMeta?: ModelVariant[];
   posteriorQuantiles?: Quantiles | null;
   observations?: NowcastObservation[] | null;
+  collapsed?: boolean;
+  onToggleCollapse?: () => void;
 };
 
 const VARIANT_COLORS = ["#fbbf24", "#7cf2c8", "#a78bfa", "#f472b6"];
@@ -109,6 +111,8 @@ export function ForecastChart({
   variantMeta,
   posteriorQuantiles,
   observations,
+  collapsed,
+  onToggleCollapse,
 }: Props) {
   const series = quantiles.p50.map((_, i) => ({
     day: i,
@@ -143,10 +147,27 @@ export function ForecastChart({
 
   return (
     <div className="rounded-md border border-ink-600 bg-ink-800 p-3">
-      <div className="flex items-baseline justify-between">
+      <div className="flex items-baseline justify-between gap-2">
         <h3 className="text-xs uppercase tracking-wide text-slate-400">{title}</h3>
-        <span className="text-[10px] text-slate-500">95% / 50% intervals + median</span>
+        <div className="flex items-center gap-2">
+          {collapsed ? null : (
+            <span className="text-[10px] text-slate-500">95% / 50% intervals + median</span>
+          )}
+          {onToggleCollapse ? (
+            <button
+              type="button"
+              aria-label={collapsed ? "Expand" : "Minimize"}
+              aria-expanded={!collapsed}
+              onClick={onToggleCollapse}
+              className="w-5 h-5 inline-flex items-center justify-center rounded border border-ink-600 text-slate-400 hover:border-slate-400 hover:text-slate-200 text-[12px] leading-none"
+            >
+              {collapsed ? "+" : "−"}
+            </button>
+          ) : null}
+        </div>
       </div>
+      {collapsed ? null : (
+      <>
       <div className="h-44 mt-2">
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={display} margin={{ top: 4, right: 6, bottom: 0, left: 0 }}>
@@ -272,6 +293,8 @@ export function ForecastChart({
           </span>
         </div>
       ) : null}
+      </>
+      )}
     </div>
   );
 }

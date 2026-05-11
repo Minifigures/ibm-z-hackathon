@@ -5,7 +5,7 @@ because we can call the functions directly), renders matplotlib figures
 mimicking each major UI panel from the *actual* simulation output, then
 assembles a multi-section PDF with reportlab.
 
-Output: docs/Disease_Outflow_Forecaster_Whitepaper.pdf
+Output: docs/Pandexis_Whitepaper.pdf
 """
 
 from __future__ import annotations
@@ -50,7 +50,7 @@ from app.simulate import SimParams, run as run_sim  # noqa: E402
 DOCS_DIR = ROOT.parent / "docs"
 FIG_DIR = DOCS_DIR / "_paper_figures"
 FIG_DIR.mkdir(parents=True, exist_ok=True)
-PDF_PATH = DOCS_DIR / "Disease_Outflow_Forecaster_Whitepaper.pdf"
+PDF_PATH = DOCS_DIR / "Pandexis_Whitepaper.pdf"
 
 # ---------- Style ---------------------------------------------------------
 ACCENT = "#0d7477"        # deep teal matches the dashboard accent
@@ -542,7 +542,7 @@ def fig_ui_layout() -> Path:
     # Header strip
     _box(0.1, 5.3, 9.8, 0.8,
          "Header",
-         "Disease Outflow Forecaster   |   sim 612 ms   |   "
+         "Pandexis   |   sim 612 ms   |   "
          "95% coverage   CRPS/100k   log score",
          fc="#e2e8f0")
 
@@ -1068,7 +1068,7 @@ def build_pdf(figs: dict[str, Path], sim: dict, restricted: dict, nowcast: dict)
         str(PDF_PATH), pagesize=LETTER,
         leftMargin=0.85*inch, rightMargin=0.85*inch,
         topMargin=0.9*inch, bottomMargin=0.9*inch,
-        title="Disease Outflow Forecaster",
+        title="Pandexis",
         author="Alomari, Alomari, Ayuste, Chakra, Sultan",
     )
 
@@ -1083,7 +1083,7 @@ def build_pdf(figs: dict[str, Path], sim: dict, restricted: dict, nowcast: dict)
     # in a single row, affiliation and date centred under the byline)
     # ----------------------------------------------------------------------
     story += [
-        P("Disease Outflow Forecaster:", "title"),
+        P("Pandexis:", "title"),
         P(
             "An Interactive Multi-Model Pandemic Simulator with "
             "Effective-Distance Routing, Particle-Filter Nowcasting, "
@@ -1097,7 +1097,7 @@ def build_pdf(figs: dict[str, Path], sim: dict, restricted: dict, nowcast: dict)
             "Ahmad Sultan",
             "authors",
         ),
-        P("Disease Outflow Forecaster Project Team", "affil"),
+        P("Pandexis Project Team", "affil"),
         P("May 2026", "date"),
     ]
 
