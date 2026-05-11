@@ -148,6 +148,10 @@ The frontend uses Stadia Maps' `alidade_smooth_dark` raster tiles for English la
 
 marco · aahir · aous · amrr · sultan
 
+## After the hackathon
+
+Submitted to Devpost on 2026-05-10. The snapshot judged by Devpost is tagged [`devpost-submission`](https://github.com/Minifigures/ibm-z-hackathon/releases/tag/devpost-submission) (commit `a8a5783`). Commits on `main` past that tag are continued development, not part of the judged submission. The submitted version is also archived in the [Devpost write-up](https://devpost.com/software/disease-outflow-forecaster).
+
 ## Status
 
 Done:
