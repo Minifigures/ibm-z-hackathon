@@ -10,13 +10,13 @@ const BACKEND_URL =
 
 const config: NextConfig = {
   reactStrictMode: true,
-  // `output: 'standalone'` makes Next.js emit a self-contained server.js
-  // bundle under .next/standalone that includes only the production deps
-  // it actually traced. Combined with the multi-stage Dockerfile, this
-  // drops the runner image from ~242 MB (full node_modules + .next) to
-  // ~80 MB, which keeps us comfortably under IBM Container Registry's
-  // 0.5 GB Lite-tier quota even after several deploys.
-  output: "standalone",
+  // NOTE: tried `output: 'standalone'` to drop the runner image from
+  // ~242 MB to ~80 MB and stay under ICR's 0.5 GB Lite-tier quota, but
+  // the standalone server.js failed to serve the app on Code Engine
+  // (container kept returning "upstream connect error" through ingress).
+  // Reverted to the classic full-node_modules + `npm run start` setup
+  // for now; the CI workflow's prune-before-build step keeps ICR usage
+  // manageable for our deploy cadence.
   env: {
     NEXT_PUBLIC_API_BASE: process.env.NEXT_PUBLIC_API_BASE ?? "http://localhost:8000",
   },
