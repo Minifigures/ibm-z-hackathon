@@ -1,8 +1,61 @@
 # Deploy: Disease Outflow Forecaster
 
-Production deploy notes for the IBM Cloud VSI in Toronto.
+The project runs on **IBM Cloud Code Engine** (serverless containers, scale-to-zero).
+`main` auto-deploys via `.github/workflows/deploy.yml`. The legacy IBM Cloud VSI
+notes are kept below for reference but are **retired** — see the banner in §1.
 
-## 1. Target
+## 0. Code Engine (current)
+
+CI builds the two images on the GitHub runner, pushes them to IBM Container
+Registry, and rolls the existing `backend` and `frontend` Code Engine apps to
+the new images. The build runs on GitHub (free CI minutes), so it consumes no
+Code Engine vCPU-seconds; only runtime does, and idle apps scale to zero.
+
+### One-time setup
+
+Configure these under **Settings → Secrets and variables → Actions**:
+
+| Kind   | Name               | Value |
+|--------|--------------------|-------|
+| Secret | `IBMCLOUD_API_KEY` | IBM Cloud API key with access to the CE project + ICR |
+| Var    | `CE_PROJECT`       | Code Engine project name hosting the `backend`/`frontend` apps |
+| Var    | `ICR_NAMESPACE`    | IBM Container Registry namespace to push images to |
+| Var    | `IBMCLOUD_REGION`  | optional, default `us-south` |
+| Var    | `ICR_DOMAIN`       | optional, default `us.icr.io` (must match the region) |
+
+Prerequisites that must already exist in the account (the apps are already
+running, so these are typically in place):
+
+- An ICR namespace matching `ICR_NAMESPACE` (`ibmcloud cr namespace-add <ns>`).
+- The Code Engine apps `backend` (port 8000) and `frontend` (port 3000), each
+  with their env vars (e.g. `WATSONX_*` on the backend) and a registry-pull
+  secret for ICR. The workflow only swaps the image; it never touches env vars,
+  so watsonx secrets never need to live in GitHub.
+
+### Cost
+
+Stays within IBM's monthly free tiers for this usage: Code Engine free
+allowance + scale-to-zero means idle costs nothing, and the build runs on
+GitHub. The one thing to watch is ICR's 0.5 GB free storage — the workflow
+sets a retention policy (keep last 3 images per repo) to stay under it.
+
+### Manual deploy / rollback
+
+```bash
+ibmcloud login --apikey "$IBMCLOUD_API_KEY" -r us-south
+ibmcloud ce project select --name "<CE_PROJECT>"
+# Roll back to a known-good image tag:
+ibmcloud ce app update --name backend  --image us.icr.io/<ns>/pandexis-backend:<sha>
+ibmcloud ce app update --name frontend --image us.icr.io/<ns>/pandexis-frontend:<sha>
+```
+
+---
+
+## 1. Target (legacy VSI — RETIRED)
+
+> **Retired.** This VSI path is no longer the deploy target; the box at
+> `163.66.95.111` currently returns 503. Kept for historical reference only.
+> Use the Code Engine flow in §0.
 
 - Host: `163.66.95.111` (ca-tor-1, 2 vCPU / 4 GB)
 - OS: Ubuntu 22.04 LTS

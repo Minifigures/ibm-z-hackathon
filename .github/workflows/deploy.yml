@@ -1,4 +1,23 @@
-name: Deploy to VSI
+name: Deploy to Code Engine
+
+# Builds the backend + frontend container images on the GitHub runner (free CI
+# minutes), pushes them to IBM Container Registry, then rolls the two IBM Cloud
+# Code Engine apps to the new images. The build deliberately runs here rather
+# than as a Code Engine build run so it consumes zero Code Engine vCPU-seconds.
+#
+# Required configuration (Settings -> Secrets and variables -> Actions):
+#   Secret  IBMCLOUD_API_KEY  IBM Cloud API key with access to the CE project + ICR
+#   Var     CE_PROJECT        Code Engine project name (e.g. the project hosting
+#                             the `backend` and `frontend` apps)
+#   Var     ICR_NAMESPACE     IBM Container Registry namespace to push images to
+# Optional vars (sensible defaults shown):
+#   Var     IBMCLOUD_REGION   default: us-south
+#   Var     ICR_DOMAIN        default: us.icr.io   (must match the region)
+#
+# The apps already exist and carry their own env vars (e.g. WATSONX_*) and
+# registry-pull secret, so this workflow only swaps the image and leaves all
+# other app config untouched. WATSONX secrets therefore never need to live in
+# GitHub.
 
 on:
   push:
@@ -6,104 +25,93 @@ on:
   workflow_dispatch: {}
 
 concurrency:
-  group: deploy-vsi
+  group: deploy-code-engine
   cancel-in-progress: false
+
+env:
+  IBMCLOUD_REGION: ${{ vars.IBMCLOUD_REGION || 'us-south' }}
+  ICR_DOMAIN: ${{ vars.ICR_DOMAIN || 'us.icr.io' }}
+  ICR_NAMESPACE: ${{ vars.ICR_NAMESPACE }}
+  CE_PROJECT: ${{ vars.CE_PROJECT }}
+  BACKEND_APP: backend
+  FRONTEND_APP: frontend
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Configure SSH
-        env:
-          DEPLOY_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
-          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate configuration
         run: |
-          mkdir -p ~/.ssh
-          echo "$DEPLOY_KEY" > ~/.ssh/id_ed25519
-          chmod 600 ~/.ssh/id_ed25519
-          ssh-keyscan -H "$DEPLOY_HOST" >> ~/.ssh/known_hosts 2>/dev/null
-
-      - name: Deploy
-        env:
-          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
-          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
-          WATSONX_APIKEY: ${{ secrets.WATSONX_APIKEY }}
-          WATSONX_PROJECT_ID: ${{ secrets.WATSONX_PROJECT_ID }}
-          WATSONX_URL: ${{ secrets.WATSONX_URL }}
-          WATSONX_MODEL_ID: ${{ secrets.WATSONX_MODEL_ID }}
-        run: |
-          # The remote heredoc is single-quoted (literal), but we still need
-          # the watsonx secrets to be readable by the remote bash. We pass
-          # them via the SSH command string, which expands locally; on the
-          # remote side they are normal environment variables that our
-          # remote script reads when writing /opt/disease-outflow/backend/.env.
-          ssh -o BatchMode=yes \
-            "$DEPLOY_USER@$DEPLOY_HOST" \
-            "WATSONX_APIKEY='$WATSONX_APIKEY' WATSONX_PROJECT_ID='$WATSONX_PROJECT_ID' WATSONX_URL='$WATSONX_URL' WATSONX_MODEL_ID='$WATSONX_MODEL_ID' bash -s" <<'REMOTE'
-          set -euo pipefail
-          APP_DIR=/opt/disease-outflow
-          cd "$APP_DIR"
-
-          before_req=$(sha1sum backend/requirements.txt | awk '{print $1}')
-          before_pkg=$(sha1sum frontend/package-lock.json | awk '{print $1}')
-
-          git fetch --depth=1 origin main
-          git reset --hard origin/main
-
-          after_req=$(sha1sum backend/requirements.txt | awk '{print $1}')
-          after_pkg=$(sha1sum frontend/package-lock.json | awk '{print $1}')
-
-          if [ "$before_req" != "$after_req" ]; then
-            echo "==> backend deps changed, reinstalling"
-            backend/.venv/bin/pip install -r backend/requirements.txt --quiet
+          : "${ICR_NAMESPACE:?Set repository variable ICR_NAMESPACE}"
+          : "${CE_PROJECT:?Set repository variable CE_PROJECT}"
+          if [ -z "${{ secrets.IBMCLOUD_API_KEY }}" ]; then
+            echo "::error::Set repository secret IBMCLOUD_API_KEY"; exit 1
           fi
 
-          if [ "$before_pkg" != "$after_pkg" ]; then
-            echo "==> frontend deps changed, npm ci"
-            (cd frontend && npm ci --no-audit --no-fund --silent)
-          fi
-
-          echo "==> rebuild frontend"
-          # NEXT_PUBLIC_* must be set at build time -- Next bakes them into
-          # the client bundle. nginx on this VSI proxies /api/* to FastAPI,
-          # so the frontend should call the same origin under /api.
-          (cd frontend && NEXT_PUBLIC_API_BASE=/api npm run build)
-
-          echo "==> write backend secrets to backend/.env"
-          # backend/app/main.py calls load_dotenv() at import time, so this
-          # file is read by the FastAPI process when systemd restarts it.
-          # Variables came in via the SSH command line (see workflow yaml);
-          # we use printf instead of a heredoc because the YAML run block
-          # forces leading whitespace and a quoted heredoc terminator must
-          # sit at column 0 to close.
-          umask 077
-          {
-            printf 'WATSONX_APIKEY=%s\n'     "${WATSONX_APIKEY:-}"
-            printf 'WATSONX_PROJECT_ID=%s\n' "${WATSONX_PROJECT_ID:-}"
-            printf 'WATSONX_URL=%s\n'        "${WATSONX_URL:-}"
-            printf 'WATSONX_MODEL_ID=%s\n'   "${WATSONX_MODEL_ID:-}"
-          } > backend/.env
-          chmod 600 backend/.env
-
-          echo "==> restart services"
-          sudo /bin/systemctl reset-failed disease-outflow-backend.service disease-outflow-frontend.service 2>/dev/null || true
-          sudo /bin/systemctl restart disease-outflow-backend.service
-          sudo /bin/systemctl restart disease-outflow-frontend.service
-          REMOTE
-
-      - name: Health check (from runner, public)
-        env:
-          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+      - name: Install IBM Cloud CLI + plugins
         run: |
-          set -e
+          curl -fsSL https://clis.cloud.ibm.com/install/linux | sh
+          ibmcloud --version
+          ibmcloud plugin install container-registry -f
+          ibmcloud plugin install code-engine -f
+
+      - name: IBM Cloud login
+        env:
+          IBMCLOUD_API_KEY: ${{ secrets.IBMCLOUD_API_KEY }}
+        run: |
+          ibmcloud login --apikey "$IBMCLOUD_API_KEY" -r "$IBMCLOUD_REGION" -q
+          ibmcloud cr region-set "$IBMCLOUD_REGION"
+          ibmcloud cr login
+          ibmcloud ce project select --name "$CE_PROJECT"
+
+      - name: Keep registry within the free tier (retain last 3 images)
+        continue-on-error: true
+        run: |
+          ibmcloud cr retention-policy-set --images 3 "$ICR_NAMESPACE/pandexis-backend"  || true
+          ibmcloud cr retention-policy-set --images 3 "$ICR_NAMESPACE/pandexis-frontend" || true
+
+      - name: Build & push backend image
+        run: |
+          IMAGE="$ICR_DOMAIN/$ICR_NAMESPACE/pandexis-backend:${GITHUB_SHA::12}"
+          docker build -t "$IMAGE" backend
+          docker push "$IMAGE"
+          echo "BACKEND_IMAGE=$IMAGE" >> "$GITHUB_ENV"
+
+      - name: Build & push frontend image
+        run: |
+          IMAGE="$ICR_DOMAIN/$ICR_NAMESPACE/pandexis-frontend:${GITHUB_SHA::12}"
+          # NEXT_PUBLIC_API_BASE=/api is baked at build time; next.config.ts
+          # rewrites /api/* to the deployed Code Engine backend by default.
+          docker build --build-arg NEXT_PUBLIC_API_BASE=/api -t "$IMAGE" frontend
+          docker push "$IMAGE"
+          echo "FRONTEND_IMAGE=$IMAGE" >> "$GITHUB_ENV"
+
+      - name: Roll Code Engine apps to the new images
+        run: |
+          # --no-wait=false (default) blocks until the new revision is ready.
+          ibmcloud ce app update --name "$BACKEND_APP"  --image "$BACKEND_IMAGE"
+          ibmcloud ce app update --name "$FRONTEND_APP" --image "$FRONTEND_IMAGE"
+
+      - name: Print public URLs
+        run: |
+          echo "Backend:  $(ibmcloud ce app get --name "$BACKEND_APP"  --output url)"
+          echo "Frontend: $(ibmcloud ce app get --name "$FRONTEND_APP" --output url)"
+
+      - name: Health check
+        run: |
+          BACK_URL="$(ibmcloud ce app get --name "$BACKEND_APP"  --output url)"
+          FRONT_URL="$(ibmcloud ce app get --name "$FRONTEND_APP" --output url)"
           ok_back=0; ok_front=0
-          for i in $(seq 1 30); do
-            if [ "$ok_back" -eq 0 ]  && curl -fsS --max-time 5 "http://${DEPLOY_HOST}/api/health" >/dev/null; then ok_back=1; fi
-            if [ "$ok_front" -eq 0 ] && curl -fsS --max-time 5 -o /dev/null "http://${DEPLOY_HOST}/";        then ok_front=1; fi
+          for i in $(seq 1 20); do
+            # CE scale-to-zero means the first request is a cold start; be patient.
+            if [ "$ok_back" -eq 0 ]  && curl -fsS --max-time 30 "$BACK_URL/health" >/dev/null; then ok_back=1; fi
+            if [ "$ok_front" -eq 0 ] && curl -fsS --max-time 30 -o /dev/null "$FRONT_URL/"; then ok_front=1; fi
             if [ "$ok_back" -eq 1 ] && [ "$ok_front" -eq 1 ]; then break; fi
-            sleep 2
+            sleep 3
           done
-          if [ "$ok_back" -ne 1 ]; then echo "::error::backend /api/health did not become healthy"; fi
-          if [ "$ok_front" -ne 1 ]; then echo "::error::frontend / did not become reachable"; fi
-          [ "$ok_back" -eq 1 ] && [ "$ok_front" -eq 1 ]
+          [ "$ok_back" -eq 1 ]  || { echo "::error::backend /health did not become healthy"; exit 1; }
+          [ "$ok_front" -eq 1 ] || { echo "::error::frontend / did not become reachable"; exit 1; }
           echo "OK"
