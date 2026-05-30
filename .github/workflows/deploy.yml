@@ -1,109 +1,154 @@
-name: Deploy to VSI
+name: Deploy to Code Engine
+
+# Replaces the old "Deploy to VSI" workflow. The VSI was torn down on
+# 2026-05-15; the live demo now runs on IBM Cloud Code Engine
+# (scale-to-zero, free tier) with the custom domain
+# https://pandexis.marcoayuste.com pointing at the frontend app.
+#
+# Strategy: we let Code Engine build the images itself from this repo
+# (`--build-source`), instead of building locally and pushing to IBM
+# Container Registry. That keeps us off ICR entirely (no namespace, no
+# Docker registry plumbing, no pull-secret), and the Code Engine
+# build-runs are covered by the same free monthly allowance as runtime.
+#
+# Required GitHub repo secret:
+#   IBMCLOUD_API_KEY   IAM API key with access to the `pandexis` project
+#
+# Optional GitHub repo variables (defaults below match the live setup):
+#   IBMCLOUD_REGION         default us-south
+#   IBMCLOUD_RESOURCE_GROUP default Default
+#   CE_PROJECT              default pandexis
 
 on:
   push:
     branches: [main]
-  workflow_dispatch: {}
+    paths:
+      - 'backend/**'
+      - 'frontend/**'
+      - '.github/workflows/deploy.yml'
+  workflow_dispatch:
+    inputs:
+      app:
+        description: 'Which app to redeploy'
+        required: true
+        default: 'both'
+        type: choice
+        options:
+          - both
+          - backend
+          - frontend
 
 concurrency:
-  group: deploy-vsi
+  group: deploy-code-engine
   cancel-in-progress: false
+
+env:
+  IBMCLOUD_REGION: ${{ vars.IBMCLOUD_REGION || 'us-south' }}
+  IBMCLOUD_RESOURCE_GROUP: ${{ vars.IBMCLOUD_RESOURCE_GROUP || 'Default' }}
+  CE_PROJECT: ${{ vars.CE_PROJECT || 'pandexis' }}
+  REPO_URL: https://github.com/${{ github.repository }}
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
-      - name: Configure SSH
-        env:
-          DEPLOY_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
-          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+      - name: Install IBM Cloud CLI + code-engine plugin
         run: |
-          mkdir -p ~/.ssh
-          echo "$DEPLOY_KEY" > ~/.ssh/id_ed25519
-          chmod 600 ~/.ssh/id_ed25519
-          ssh-keyscan -H "$DEPLOY_HOST" >> ~/.ssh/known_hosts 2>/dev/null
+          curl -fsSL https://clis.cloud.ibm.com/install/linux | sh
+          ibmcloud --version
+          ibmcloud plugin install code-engine -f
+          ibmcloud config --check-version=false
 
-      - name: Deploy
+      - name: Login + select Code Engine project
         env:
-          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
-          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
-          WATSONX_APIKEY: ${{ secrets.WATSONX_APIKEY }}
-          WATSONX_PROJECT_ID: ${{ secrets.WATSONX_PROJECT_ID }}
-          WATSONX_URL: ${{ secrets.WATSONX_URL }}
-          WATSONX_MODEL_ID: ${{ secrets.WATSONX_MODEL_ID }}
+          IBMCLOUD_API_KEY: ${{ secrets.IBMCLOUD_API_KEY }}
         run: |
-          # The remote heredoc is single-quoted (literal), but we still need
-          # the watsonx secrets to be readable by the remote bash. We pass
-          # them via the SSH command string, which expands locally; on the
-          # remote side they are normal environment variables that our
-          # remote script reads when writing /opt/disease-outflow/backend/.env.
-          ssh -o BatchMode=yes \
-            "$DEPLOY_USER@$DEPLOY_HOST" \
-            "WATSONX_APIKEY='$WATSONX_APIKEY' WATSONX_PROJECT_ID='$WATSONX_PROJECT_ID' WATSONX_URL='$WATSONX_URL' WATSONX_MODEL_ID='$WATSONX_MODEL_ID' bash -s" <<'REMOTE'
-          set -euo pipefail
-          APP_DIR=/opt/disease-outflow
-          cd "$APP_DIR"
+          ibmcloud login --apikey "$IBMCLOUD_API_KEY" \
+            -r "$IBMCLOUD_REGION" -g "$IBMCLOUD_RESOURCE_GROUP"
+          ibmcloud ce project select --name "$CE_PROJECT"
 
-          before_req=$(sha1sum backend/requirements.txt | awk '{print $1}')
-          before_pkg=$(sha1sum frontend/package-lock.json | awk '{print $1}')
-
-          git fetch --depth=1 origin main
-          git reset --hard origin/main
-
-          after_req=$(sha1sum backend/requirements.txt | awk '{print $1}')
-          after_pkg=$(sha1sum frontend/package-lock.json | awk '{print $1}')
-
-          if [ "$before_req" != "$after_req" ]; then
-            echo "==> backend deps changed, reinstalling"
-            backend/.venv/bin/pip install -r backend/requirements.txt --quiet
+      - name: Resolve which app(s) to redeploy
+        id: which
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # On push: rebuild any app whose directory changed in the diff.
+          # On manual dispatch: honour the `app` input.
+          backend=0
+          frontend=0
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            case "${{ inputs.app }}" in
+              both)     backend=1; frontend=1 ;;
+              backend)  backend=1; frontend=0 ;;
+              frontend) backend=0; frontend=1 ;;
+            esac
+          else
+            base="${{ github.event.before }}"
+            head="${{ github.sha }}"
+            # First push / force-push from nothing -> rebuild both.
+            if [ "$base" = "0000000000000000000000000000000000000000" ]; then
+              backend=1; frontend=1
+            else
+              # We don't checkout the repo, so use the compare API to list changed files.
+              changed=$(curl -s -H "Authorization: Bearer $GH_TOKEN" \
+                "https://api.github.com/repos/${{ github.repository }}/compare/$base...$head" \
+                | grep -oE '"filename":[[:space:]]*"[^"]+"' \
+                | sed 's/.*"\(.*\)".*/\1/')
+              echo "$changed" | grep -q '^backend/'  && backend=1
+              echo "$changed" | grep -q '^frontend/' && frontend=1
+              # Workflow self-change retests both (safer default).
+              if echo "$changed" | grep -q '^\.github/workflows/deploy\.yml$'; then
+                backend=1; frontend=1
+              fi
+            fi
           fi
+          echo "backend=$backend"   >> "$GITHUB_OUTPUT"
+          echo "frontend=$frontend" >> "$GITHUB_OUTPUT"
+          echo "Will redeploy: backend=$backend frontend=$frontend"
 
-          if [ "$before_pkg" != "$after_pkg" ]; then
-            echo "==> frontend deps changed, npm ci"
-            (cd frontend && npm ci --no-audit --no-fund --silent)
-          fi
-
-          echo "==> rebuild frontend"
-          # NEXT_PUBLIC_* must be set at build time -- Next bakes them into
-          # the client bundle. nginx on this VSI proxies /api/* to FastAPI,
-          # so the frontend should call the same origin under /api.
-          (cd frontend && NEXT_PUBLIC_API_BASE=/api npm run build)
-
-          echo "==> write backend secrets to backend/.env"
-          # backend/app/main.py calls load_dotenv() at import time, so this
-          # file is read by the FastAPI process when systemd restarts it.
-          # Variables came in via the SSH command line (see workflow yaml);
-          # we use printf instead of a heredoc because the YAML run block
-          # forces leading whitespace and a quoted heredoc terminator must
-          # sit at column 0 to close.
-          umask 077
-          {
-            printf 'WATSONX_APIKEY=%s\n'     "${WATSONX_APIKEY:-}"
-            printf 'WATSONX_PROJECT_ID=%s\n' "${WATSONX_PROJECT_ID:-}"
-            printf 'WATSONX_URL=%s\n'        "${WATSONX_URL:-}"
-            printf 'WATSONX_MODEL_ID=%s\n'   "${WATSONX_MODEL_ID:-}"
-          } > backend/.env
-          chmod 600 backend/.env
-
-          echo "==> restart services"
-          sudo /bin/systemctl reset-failed disease-outflow-backend.service disease-outflow-frontend.service 2>/dev/null || true
-          sudo /bin/systemctl restart disease-outflow-backend.service
-          sudo /bin/systemctl restart disease-outflow-frontend.service
-          REMOTE
-
-      - name: Health check (from runner, public)
-        env:
-          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+      - name: Rebuild + roll backend
+        if: steps.which.outputs.backend == '1'
         run: |
-          set -e
-          ok_back=0; ok_front=0
-          for i in $(seq 1 30); do
-            if [ "$ok_back" -eq 0 ]  && curl -fsS --max-time 5 "http://${DEPLOY_HOST}/api/health" >/dev/null; then ok_back=1; fi
-            if [ "$ok_front" -eq 0 ] && curl -fsS --max-time 5 -o /dev/null "http://${DEPLOY_HOST}/";        then ok_front=1; fi
-            if [ "$ok_back" -eq 1 ] && [ "$ok_front" -eq 1 ]; then break; fi
-            sleep 2
+          ibmcloud ce app update \
+            --name backend \
+            --build-source "$REPO_URL" \
+            --build-context-dir backend \
+            --build-dockerfile Dockerfile \
+            --wait-timeout 600
+
+      - name: Rebuild + roll frontend
+        if: steps.which.outputs.frontend == '1'
+        run: |
+          ibmcloud ce app update \
+            --name frontend \
+            --build-source "$REPO_URL" \
+            --build-context-dir frontend \
+            --build-dockerfile Dockerfile \
+            --wait-timeout 600
+
+      - name: Smoke test
+        run: |
+          BACKEND_URL=$(ibmcloud ce app get --name backend  --output url)
+          FRONTEND_URL=$(ibmcloud ce app get --name frontend --output url)
+          echo "backend  : $BACKEND_URL"
+          echo "frontend : $FRONTEND_URL"
+          echo "custom   : https://pandexis.marcoayuste.com (Cloudflare CNAME)"
+          fail=0
+          # Cold start can be ~5-10s for Next.js; retry a few times.
+          for app in backend frontend; do
+            if [ "$app" = "backend" ]; then url="$BACKEND_URL/health"; else url="$FRONTEND_URL/"; fi
+            code=000
+            for i in 1 2 3 4 5; do
+              code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 30 "$url" || echo 000)
+              echo "[$app try $i] $url -> $code"
+              [ "$code" = "200" ] && break
+              sleep 10
+            done
+            [ "$code" = "200" ] || fail=1
           done
-          if [ "$ok_back" -ne 1 ]; then echo "::error::backend /api/health did not become healthy"; fi
-          if [ "$ok_front" -ne 1 ]; then echo "::error::frontend / did not become reachable"; fi
-          [ "$ok_back" -eq 1 ] && [ "$ok_front" -eq 1 ]
-          echo "OK"
+          # Custom domain probe is soft (DNS+CE+cert all have to line up).
+          dom_code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 30 https://pandexis.marcoayuste.com/ || echo 000)
+          echo "[custom] https://pandexis.marcoayuste.com -> $dom_code"
+          [ "$dom_code" = "200" ] || echo "  (custom domain non-200 is a soft warning, not a build failure)"
+          exit $fail
