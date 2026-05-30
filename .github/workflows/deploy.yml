@@ -107,37 +107,25 @@ jobs:
           echo "frontend=$frontend" >> "$GITHUB_OUTPUT"
           echo "Will redeploy: backend=$backend frontend=$frontend"
 
-      - name: Prune ICR before build (free space, keep currently-deployed image)
-        # IBM Container Registry Lite tier caps storage at 0.5 GB. Both
-        # of our images together (backend ~107 MB + frontend ~242 MB +
-        # layer overhead) push us right against that cap, so a fresh
-        # buildrun has nowhere to push the new layers. We run this BEFORE
-        # the build steps: for each app, we look up the image tag the
-        # currently-Ready revision references, delete every OTHER tag in
-        # the ce-- namespace, and report the post-prune quota so the run
-        # log explains the storage state. Currently-deployed images are
-        # preserved so running pods can keep pulling on cold start.
+      - name: Inspect ICR quota (no pre-build prune)
+        # We used to prune ICR here to free space before the build, but that
+        # was risky: Code Engine pins running revisions to image **digests**
+        # (`name@sha256:...`), not tags. Our naive ${live_image##*:} extraction
+        # would return the digest hash instead of the tag, so no tags would
+        # match the "keep" filter and the prune would wipe the live image,
+        # taking the running pods offline as soon as they tried to scale up
+        # from zero (we shipped this bug and the site went down for ~14h
+        # overnight — see commits 2ba133a..ec2d12c).
+        # The post-build prune is sufficient: it always leaves exactly one
+        # current image per app, so steady-state usage is ~349 MB which fits
+        # comfortably under ICR Lite's 0.5 GB quota. The very first build
+        # after enabling this workflow may hit a quota warning; if it does,
+        # delete old tags manually once with `ibmcloud cr image-rm`.
         run: |
           set +e
           ibmcloud plugin install container-registry -f >/dev/null 2>&1
           ibmcloud cr region-set "$IBMCLOUD_REGION" >/dev/null 2>&1
-          NS=$(ibmcloud cr namespaces 2>/dev/null | awk 'NR>3 && $1 ~ /^ce--/ {print $1; exit}')
-          if [ -z "$NS" ]; then echo "no ce-- namespace found, skip"; exit 0; fi
-          echo "namespace: $NS"
-          for app in backend frontend; do
-            live=$(ibmcloud ce app get --name "$app" --output jsonpath='{.status.latestReadyRevision}' 2>/dev/null)
-            live_image=$(ibmcloud ce revision get --name "$live" --output jsonpath='{.spec.containers[0].image}' 2>/dev/null)
-            live_tag="${live_image##*:}"
-            echo "[$app] live tag (kept): $live_tag"
-            ibmcloud cr images --restrict "$NS/app-$app" --format '{{.Tag}}' 2>/dev/null \
-              | grep -v "^$live_tag$" \
-              | while read t; do
-                  [ -z "$t" ] && continue
-                  echo "  rm $NS/app-$app:$t"
-                  ibmcloud cr image-rm "us.icr.io/$NS/app-$app:$t" >/dev/null 2>&1
-                done
-          done
-          echo "ICR quota after prune:"
+          echo "ICR quota before build:"
           ibmcloud cr quota 2>&1 | grep -E 'Limit|Storage' || true
 
       - name: Rebuild + roll backend
@@ -182,14 +170,44 @@ jobs:
           set +e
           NS=$(ibmcloud cr namespaces 2>/dev/null | awk 'NR>3 && $1 ~ /^ce--/ {print $1; exit}')
           if [ -z "$NS" ]; then exit 0; fi
+          # Resolve the digest the running revision actually pulls. Code Engine
+          # rewrites `image: <name>:<tag>` to `image: <name>@sha256:<digest>`
+          # in the revision spec, so we have to look up the digest, then find
+          # which TAG in ICR currently points at that digest, and preserve
+          # only that tag. Anything else is safe to delete.
+          # Using `ibmcloud cr images --format` gives us `repo:tag digest`
+          # pairs we can grep.
           for app in backend frontend; do
             live=$(ibmcloud ce app get --name "$app" --output jsonpath='{.status.latestReadyRevision}' 2>/dev/null)
             live_image=$(ibmcloud ce revision get --name "$live" --output jsonpath='{.spec.containers[0].image}' 2>/dev/null)
-            live_tag="${live_image##*:}"
+            # `live_image` looks like:
+            #   private.us.icr.io/ce--ff296-29vrap7vinsk/app-frontend@sha256:abcd1234...
+            # or, occasionally for fresh deploys before CE rewrites:
+            #   private.us.icr.io/ce--ff296-29vrap7vinsk/app-frontend:260514-2327-isc6j
+            case "$live_image" in
+              *@sha256:*)
+                live_digest="${live_image##*@}"   # "sha256:abcd..."
+                # Map digest -> tag by listing every tag's manifest digest.
+                live_tag=$(ibmcloud cr images --restrict "$NS/app-$app" --format '{{.Tag}} {{.Digest}}' 2>/dev/null \
+                  | awk -v d="${live_digest#sha256:}" '$2 == d || $2 == "sha256:"d {print $1; exit}')
+                ;;
+              *)
+                live_tag="${live_image##*:}"
+                ;;
+            esac
+            # Safety: if we couldn't resolve a tag, skip this app rather than
+            # delete the wrong thing. This is exactly the case that wiped the
+            # site overnight on 2026-05-30 — refuse to delete blindly.
+            if [ -z "$live_tag" ]; then
+              echo "[$app] could not resolve live tag from $live_image, skipping prune"
+              continue
+            fi
+            echo "[$app] live tag (kept): $live_tag"
             ibmcloud cr images --restrict "$NS/app-$app" --format '{{.Tag}}' 2>/dev/null \
               | grep -v "^$live_tag$" \
               | while read t; do
                   [ -z "$t" ] && continue
+                  echo "  rm $NS/app-$app:$t"
                   ibmcloud cr image-rm "us.icr.io/$NS/app-$app:$t" >/dev/null 2>&1
                 done
           done
