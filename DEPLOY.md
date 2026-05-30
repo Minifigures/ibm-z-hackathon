@@ -1,10 +1,65 @@
 # Deploy: Disease Outflow Forecaster
 
-Production deploy notes for the IBM Cloud VSI in Toronto.
+## Current target: IBM Cloud Code Engine (scale-to-zero, free tier)
 
-## 1. Target
+The live demo runs on **IBM Cloud Code Engine** in `us-south`, project `pandexis`.
 
-- Host: `163.66.95.111` (ca-tor-1, 2 vCPU / 4 GB)
+| Component | URL |
+| --- | --- |
+| Frontend (custom domain) | https://pandexis.marcoayuste.com |
+| Frontend (Code Engine) | https://frontend.29vrap7vinsk.us-south.codeengine.appdomain.cloud |
+| Backend (Code Engine) | https://backend.29vrap7vinsk.us-south.codeengine.appdomain.cloud |
+
+Both apps scale to zero when idle (first request after idleness has a ~5-10s cold start, then sub-second). Effective cost: **CA$0/month** within the free monthly allowances.
+
+### CI/CD
+
+`.github/workflows/deploy.yml` ("Deploy to Code Engine") fires on every push to `main` that touches `backend/`, `frontend/`, or the workflow itself. It does:
+
+1. Install the IBM Cloud CLI + `code-engine` plugin on the GitHub runner.
+2. Login with `IBMCLOUD_API_KEY` (repo secret) and select the `pandexis` project.
+3. Detect which app(s) changed in the diff (or honour the manual `app` input).
+4. Run `ibmcloud ce app update --build-source <repo-url> ...` for the changed app(s). Code Engine pulls the source, builds the Dockerfile inside a buildrun, and rolls a new revision. This stays inside Code Engine, so no IBM Container Registry namespace, no Docker push, no pull-secret.
+5. Health-check the resulting URLs (with cold-start retries).
+
+### Required GitHub repo secret
+
+- `IBMCLOUD_API_KEY`: IAM API key with access to the `pandexis` Code Engine project. Generate at https://cloud.ibm.com/iam/apikeys.
+
+### Optional GitHub repo variables (defaults match the live setup)
+
+- `IBMCLOUD_REGION` (default `us-south`)
+- `IBMCLOUD_RESOURCE_GROUP` (default `Default`)
+- `CE_PROJECT` (default `pandexis`)
+
+### Custom domain (pandexis.marcoayuste.com)
+
+DNS lives on Cloudflare: `CNAME pandexis -> custom.29vrap7vinsk.us-south.codeengine.appdomain.cloud` (proxy off / DNS-only, because IBM does Let's Encrypt validation that fails behind Cloudflare's proxy). The IBM-side TLS secret is `pandexis-tls`, generated with `acme.sh` DNS-01 manual mode; cert expires ~90 days after issue and is renewed by re-running `acme.sh --renew` plus `ibmcloud ce secret update --name pandexis-tls --cert-chain-file ... --private-key-file ...`.
+
+### Manual deploy (when CI is broken or you want to bypass it)
+
+From IBM Cloud Shell (https://cloud.ibm.com/shell):
+
+```bash
+ibmcloud target -r us-south -g Default
+ibmcloud ce project select --name pandexis
+ibmcloud ce app update --name backend \
+  --build-source https://github.com/Minifigures/ibm-z-hackathon \
+  --build-context-dir backend --build-dockerfile Dockerfile
+ibmcloud ce app update --name frontend \
+  --build-source https://github.com/Minifigures/ibm-z-hackathon \
+  --build-context-dir frontend --build-dockerfile Dockerfile
+```
+
+---
+
+## RETIRED: IBM Cloud VPC VSI in Toronto
+
+The original deploy target was a 2 vCPU / 4 GB Ubuntu VSI at `163.66.95.111` (ca-tor-1), torn down on **2026-05-15** in favour of Code Engine's scale-to-zero pricing. The instance, floating IP, public gateway, subnet, VPC, and SSH key have all been deleted. The sections below are kept for posterity (and in case anyone wants to spin up a VSI deploy on a fresh box) but the current live demo no longer uses any of this.
+
+## 1. Target (retired)
+
+- Host: `163.66.95.111` (ca-tor-1, 2 vCPU / 4 GB) **[DELETED]**
 - OS: Ubuntu 22.04 LTS
 - Assumes: SSH access as a sudo-capable user. Replace `deploy` below with your user if different.
 

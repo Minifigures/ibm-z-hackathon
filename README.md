@@ -26,7 +26,7 @@ A four-equation slide is in the PRD (Section 7.1) and every output traces to one
 | Charts | Recharts |
 | Styling | Tailwind CSS |
 | LLM | IBM watsonx.ai Granite (chat completions), Anthropic Claude Haiku, templated fallback |
-| Deploy | GitHub Actions, SSH-based pull-and-restart on the IBM VSI |
+| Deploy | GitHub Actions, `ibmcloud ce app update --build-source` to IBM Code Engine (scale-to-zero, free tier). Custom domain `pandexis.marcoayuste.com` via Cloudflare CNAME + Let's Encrypt. |
 
 ## Layout
 
@@ -54,7 +54,7 @@ A four-equation slide is in the PRD (Section 7.1) and every output traces to one
 ├── docs/
 │   ├── PRD.md                     Full product spec
 │   └── TRACKS.md                  Track-targeting matrix and gaps
-├── .github/workflows/deploy.yml   Auto-deploy main to IBM VSI on push
+├── .github/workflows/deploy.yml   Auto-deploy main to IBM Code Engine on push (scale-to-zero, free tier)
 └── README.md
 ```
 
@@ -129,7 +129,7 @@ A 200-run, 30-day, 70-region simulation completes in roughly 250 ms on a laptop,
 
 The frontend uses Stadia Maps' `alidade_smooth_dark` raster tiles for English labels. The free tier serves anonymous requests on `localhost` without an API key, which covers local dev and hackathon judging. **For any non-localhost deploy** you need to either (a) sign up for a free Stadia API key and append `?api_key=...` to the tile URL in `frontend/components/world-map.tsx`, or (b) self-host the underlying OpenMapTiles via something like `protomaps`. Anonymous deployed origins will get 401/403 from Stadia.
 
-`main` auto-deploys to the IBM VSI via `.github/workflows/deploy.yml`. The action uses three repository secrets (`DEPLOY_HOST`, `DEPLOY_USER`, `DEPLOY_SSH_KEY`), SSHs into the box, fetches `main`, reinstalls deps only when their lockfile hashes change, rebuilds the frontend, restarts the two systemd units (`disease-outflow-backend.service`, `disease-outflow-frontend.service`), and waits up to 60 s for both health checks to pass.
+`main` auto-deploys to **IBM Cloud Code Engine** via `.github/workflows/deploy.yml`. The action installs the IBM Cloud CLI + `code-engine` plugin on the GitHub runner, logs in with the `IBMCLOUD_API_KEY` repo secret, detects which app(s) changed in the diff (or honours the manual `app` input from `workflow_dispatch`), and runs `ibmcloud ce app update --build-source <repo> --build-context-dir <backend|frontend> --build-dockerfile Dockerfile`. Code Engine pulls the source, builds the Dockerfile inside its own buildrun, and rolls a new revision (scale-to-zero, free tier). Smoke-test step then probes the resulting URLs plus the custom domain at https://pandexis.marcoayuste.com. See [`DEPLOY.md`](DEPLOY.md) for the full setup including custom-domain TLS.
 
 ## Demo flow
 
@@ -169,7 +169,7 @@ Done:
 - [x] /nowcast endpoint capped at 365 observations and rate-limited to 10 calls per minute per IP. /disease-params rate-limited to 20 per minute per IP.
 - [x] Real-data mobility ingestion wired into the simulator: OpenFlights routes (`real_air_hub`), UN DESA 2020 bilateral migrant stocks (2,790 corridors via `un_migrant_multiplier_matrix`), US BTS T-100 2019 passenger volumes (`bts_us_anchored_flows` rescaling the USA row+column), Top-50 container ports TEU (`real_port_hub`), and a hand-curated bilateral-corridor table. Eurostat AVIA_PAOCC is loaded but intentionally inactive (overlay net-degraded backtest rho on mpox). All wired into `combined_mobility()` with synthetic-hub fallbacks for missing pairs.
 - [x] `GET /data-sources` provenance endpoint surfacing the manifest of every loaded dataset (file, source, year, n_records, active flag, file mtime), so judges can see at a glance which feeds are live.
-- [x] Auto-deploy to IBM VSI on push to `main` with Next.js `/api/*` rewrites so the frontend works behind nginx OR on raw :3000
+- [x] Auto-deploy to IBM Code Engine on push to `main` (scale-to-zero, free tier) with Next.js `/api/*` rewrites pointing at the deployed backend
 
 Open:
 
