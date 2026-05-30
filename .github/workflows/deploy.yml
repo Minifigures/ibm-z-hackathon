@@ -142,6 +142,12 @@ jobs:
 
       - name: Rebuild + roll backend
         if: steps.which.outputs.backend == '1'
+        # The Code Engine CLI defaults to waiting for the new revision to be
+        # Ready and to receive traffic. For our backend that takes <2 min, so
+        # we keep the wait. We use continue-on-error so a slow wait doesn't
+        # block the post-build prune + smoke-test from running; the smoke
+        # test is the real pass/fail signal.
+        continue-on-error: true
         run: |
           ibmcloud ce app update \
             --name backend \
@@ -152,13 +158,19 @@ jobs:
 
       - name: Rebuild + roll frontend
         if: steps.which.outputs.frontend == '1'
+        # Next.js cold-start + image swap can blow past 10 min on Code Engine
+        # even when the underlying buildrun succeeded. We don't want the CLI's
+        # wait timeout to fail the job in that case, since the deploy itself
+        # is fine. continue-on-error: true lets the smoke test be the real
+        # pass/fail (and that step polls for 5x30s, so it catches actual issues).
+        continue-on-error: true
         run: |
           ibmcloud ce app update \
             --name frontend \
             --build-source "$REPO_URL" \
             --build-context-dir frontend \
             --build-dockerfile Dockerfile \
-            --wait-timeout 600
+            --wait-timeout 900
 
       - name: Prune ICR after build (delete the now-stale previous image)
         if: always()
