@@ -127,6 +127,41 @@ jobs:
             --build-dockerfile Dockerfile \
             --wait-timeout 600
 
+      - name: Prune old ICR image tags (keep latest 1 per app)
+        if: always()
+        # IBM Container Registry Lite tier caps storage at 0.5 GB. Each
+        # Code Engine buildrun pushes a new image tag to the project's
+        # private namespace, so without retention we hit the cap after
+        # ~2-3 deploys. We keep only the *currently-deployed* image for
+        # each app, identified by the SHA on the running revision, and
+        # delete every other tag. `always()` so retention runs even when
+        # the previous step rolled back, freeing space for the next try.
+        run: |
+          set +e
+          ibmcloud plugin install container-registry -f >/dev/null 2>&1
+          ibmcloud cr region-set "$IBMCLOUD_REGION" >/dev/null 2>&1
+          # Resolve the namespace Code Engine pushes into (project-prefixed).
+          NS=$(ibmcloud cr namespaces 2>/dev/null | awk 'NR>3 && $1 ~ /^ce--/ {print $1; exit}')
+          if [ -z "$NS" ]; then echo "no ce-- namespace found, skip"; exit 0; fi
+          echo "namespace: $NS"
+          for app in backend frontend; do
+            live=$(ibmcloud ce app get --name "$app" --output jsonpath='{.status.latestReadyRevision}' 2>/dev/null)
+            # latestReadyRevision is the revision name, image is referenced separately:
+            live_image=$(ibmcloud ce revision get --name "$live" --output jsonpath='{.spec.containers[0].image}' 2>/dev/null)
+            live_tag="${live_image##*:}"
+            echo "[$app] live tag: $live_tag"
+            # List all tags for this app, delete every one that isn't the live tag.
+            ibmcloud cr images --restrict "$NS/app-$app" --format '{{.Tag}}' 2>/dev/null \
+              | grep -v "^$live_tag$" \
+              | while read t; do
+                  [ -z "$t" ] && continue
+                  echo "  rm $NS/app-$app:$t"
+                  ibmcloud cr image-rm "us.icr.io/$NS/app-$app:$t" >/dev/null 2>&1
+                done
+          done
+          echo "ICR quota after prune:"
+          ibmcloud cr quota 2>&1 | grep -E 'Limit|Storage' || true
+
       - name: Smoke test
         run: |
           BACKEND_URL=$(ibmcloud ce app get --name backend  --output url)
